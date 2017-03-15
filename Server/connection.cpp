@@ -6,7 +6,6 @@
 #include <QDebug>
 #include <string>
 
-using std::string;
 
 
 Connection::Connection()
@@ -15,20 +14,157 @@ Connection::Connection()
 }
 
 
-bool Connection::_WSAStartup(WSADATA &wsa){
+void Connection::WSAError(std::string method, int error){
+    qDebug() << method.c_str() << " failed with error " << error << endl;
+    WSACleanup();
+    exit(1);
+}
+
+
+bool Connection::WSAStartup(){
+    WSADATA wsa;
     DWORD Ret;
-    if ((Ret = WSAStartup(0x0202, &wsa)) != 0)
+    if ((Ret = ::WSAStartup(0x0202, &wsa)) != 0)
     {
-        qDebug() << "WSAStartup() failed with error " << Ret << endl;
+        WSAError("WSAStartup()", Ret);
         return false;
     }
     return true;
 }
+
+
+bool Connection::WSASocket_TCP(SOCKET &s){
+    if ((s = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0,
+            WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
+    {
+        WSAError("WSASocket()", WSAGetLastError());
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::bind(SOCKET &s){
+    SOCKADDR_IN InternetAddr;
+    InternetAddr.sin_family = AF_INET;
+    InternetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    InternetAddr.sin_port = htons(PORT);
+
+    if (::bind(s, (PSOCKADDR) &InternetAddr, sizeof(InternetAddr)) == SOCKET_ERROR)
+    {
+       WSAError("bind()", WSAGetLastError());
+       return false;
+    }
+    return true;
+}
+
+
+bool Connection::listen(SOCKET &s){
+    int backlog = 5;
+    if (::listen(s, backlog))
+    {
+        WSAError("listen()", WSAGetLastError());
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::WSACreateEvent(WSAEVENT &event){
+    if ((event = ::WSACreateEvent()) == WSA_INVALID_EVENT)
+    {
+        WSAError("WSACreateEvent()", WSAGetLastError());
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::WSASetEvent(WSAEVENT &event){
+    if (::WSASetEvent(event) == FALSE)
+    {
+        WSAError("WSASetEvent()", WSAGetLastError());
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::WSAWaitForMultipleEvents(WSAEVENT EventArray[]){
+    DWORD index;
+    while(TRUE)
+    {
+        index = ::WSAWaitForMultipleEvents(1, EventArray, FALSE, WSA_INFINITE, TRUE);
+        if (index == WSA_WAIT_FAILED)
+        {
+            WSAError("WSAWaitForMultipleEvents()", WSAGetLastError());
+            return false;
+        }
+        if (index != WAIT_IO_COMPLETION)
+        {
+            break;
+        }
+    }
+    WSAResetEvent(EventArray[index - WSA_WAIT_EVENT_0]);
+    return true;
+}
+
+
+bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET &s){
+    if ((SocketInfo = (LPSOCKET_INFORMATION) GlobalAlloc(GPTR, sizeof(SOCKET_INFORMATION))) == NULL)
+    {
+        WSAError("GlobalAlloc()", GetLastError());
+        return false;
+    }
+    SocketInfo->Socket = s;
+    ZeroMemory(&(SocketInfo->Overlapped), sizeof(WSAOVERLAPPED));
+    SocketInfo->BytesSEND = 0;
+    SocketInfo->BytesRECV = 0;
+    SocketInfo->DataBuf.len = DATA_BUFSIZE;
+    SocketInfo->DataBuf.buf = SocketInfo->Buffer;
+    return true;
+}
+
+
+bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
+    DWORD SendBytes;
+    if (::WSASend(SI->Socket, &(SI->DataBuf), 1, &SendBytes, 0,
+            &(SI->Overlapped), lpCompletionRoutine) == SOCKET_ERROR)
+    {
+        if (WSAGetLastError() != WSA_IO_PENDING)
+        {
+            WSAError("WSASend()", WSAGetLastError());
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool Connection::WSARecv(LPSOCKET_INFORMATION &SI,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
+    DWORD Flags = 0;
+    DWORD RecvBytes;
+    if (::WSARecv(SI->Socket, &(SI->DataBuf), 1, &RecvBytes, &Flags,
+            &(SI->Overlapped), lpCompletionRoutine) == SOCKET_ERROR)
+    {
+        if (WSAGetLastError() != WSA_IO_PENDING)
+        {
+            WSAError("WSARecv()", WSAGetLastError());
+            return false;
+        }
+    }
+    return true;
+}
+
+
+/*
 //FD_ACCEPT|FD_CLOSE
 bool Connection::_WSAEventSelect(SOCKET &s, long lNetworkEvents){
     if (WSAEventSelect(s, EventArray[EventTotal - 1], lNetworkEvents) == SOCKET_ERROR)
     {
-        qDebug() << "WSAEventSelect() failed with error " << WSAGetLastError() << endl;
+
         return false;
     }
     return true;
@@ -53,24 +189,8 @@ bool Connection::_SocketUDP(SOCKET &s){
     return true;
 }
 
-bool Connection::_Bind(SOCKET &s, SOCKADDR_IN &InternetAddr){
-    if (bind(s, (PSOCKADDR) &InternetAddr, sizeof(InternetAddr)) == SOCKET_ERROR)
-    {
-        qDebug() << "bind() failed with error " << WSAGetLastError() << endl;
-        return false;
-    }
-    return true;
-}
 
-bool Connection::_Listen(SOCKET &s){
-    int backlog = 5;
-    if (listen(s, backlog))
-    {
-        qDebug() << "listen() failed with error " << WSAGetLastError() << endl;
-        return false;
-    }
-    return true;
-}
+
 
 
 bool Connection::_Connect(SOCKET &s, SOCKADDR_IN &clientService){
@@ -159,134 +279,5 @@ bool Connection::_WSARecv(LPSOCKET_INFORMATION &SocketInfo, DWORD &Event){
 }
 
 
+*/
 
-
-bool Connection::ReadData(string &buffer, WSANETWORKEVENTS &NetworkEvents, DWORD &Event){
-
-    if (NetworkEvents.lNetworkEvents & FD_READ ||
-        NetworkEvents.lNetworkEvents & FD_WRITE)
-    {
-        if (NetworkEvents.lNetworkEvents & FD_READ &&
-            NetworkEvents.iErrorCode[FD_READ_BIT] != 0)
-        {
-            qDebug() << "FD_READ failed with error" << NetworkEvents.iErrorCode[FD_READ_BIT] << endl;
-            return false;
-        }
-
-        if (NetworkEvents.lNetworkEvents & FD_WRITE &&
-            NetworkEvents.iErrorCode[FD_WRITE_BIT] != 0)
-        {
-            qDebug() << "FD_WRITE failed with error" << NetworkEvents.iErrorCode[FD_WRITE_BIT] << endl;
-            return false;
-        }
-
-        LPSOCKET_INFORMATION SocketInfo = SocketArray[Event - WSA_WAIT_EVENT_0];
-
-        // Read data only if the receive buffer is empty.
-        if (SocketInfo->BytesRECV == 0)
-        {
-           SocketInfo->DataBuf.buf = SocketInfo->Buffer;
-           SocketInfo->DataBuf.len = DATA_BUFSIZE;
-
-           _WSARecv(SocketInfo, Event);
-
-        }
-        // Write buffer data if it is available.
-        if(SocketInfo->DataBuf.buf == NULL){
-            return false;
-        }
-        buffer = string(SocketInfo->DataBuf.buf);
-        qDebug() << "Server: RecvPacket:" << SocketInfo->DataBuf.buf << endl;
-
-        SocketInfo->BytesRECV = 0;
-    }
-    return true;
-}
-
-
-bool Connection::ReceiveNewConnection(SOCKET &s, DWORD &Event, WSANETWORKEVENTS &NetworkEvents){
-    if (NetworkEvents.lNetworkEvents & FD_ACCEPT)
-    {
-       if (NetworkEvents.iErrorCode[FD_ACCEPT_BIT] != 0)
-       {
-           qDebug() << "FD_ACCEPT failed with error " << NetworkEvents.iErrorCode[FD_ACCEPT_BIT] << endl;
-           return false;
-       }
-       if(!_Accept(s, Event)){
-           return false;
-       }
-       if (EventTotal > WSA_MAXIMUM_WAIT_EVENTS)
-       {
-           qDebug() << "Too many connections - closing socket." << endl;
-           closesocket(s);
-           return false;
-       }
-       CreateSocketInformation(s);
-
-       if(!_WSAEventSelect(s, FD_READ|FD_WRITE|FD_CLOSE)){
-           qDebug() << "Too many connections - closing socket." << endl;
-           return false;
-       }
-       qDebug() << "Socket " << s << " connected" << endl;
-    }
-    return true;
-}
-
-bool Connection::CloseSocket(DWORD &Event, WSANETWORKEVENTS &NetworkEvents){
-    if (NetworkEvents.lNetworkEvents & FD_CLOSE)
-    {
-        if (NetworkEvents.iErrorCode[FD_CLOSE_BIT] != 0)
-        {
-            qDebug() << "FD_CLOSE failed with error " << NetworkEvents.iErrorCode[FD_CLOSE_BIT] << endl;
-            return false;
-        }
-        qDebug() << "Closing socket information " << SocketArray[Event - WSA_WAIT_EVENT_0]->Socket << endl;
-        FreeSocketInformation(Event - WSA_WAIT_EVENT_0);
-    }
-    return true;
-}
-
-
-
-bool Connection::CreateSocketInformation(SOCKET s)
-{
-    LPSOCKET_INFORMATION SI;
-
-    if ((EventArray[EventTotal] = WSACreateEvent()) == WSA_INVALID_EVENT)
-    {
-        qDebug() << "WSACreateEvent() failed with error " << WSAGetLastError() << endl;
-        return false;
-    }
-
-    if ((SI = (LPSOCKET_INFORMATION) GlobalAlloc(GPTR,
-      sizeof(SOCKET_INFORMATION))) == NULL)
-    {
-        qDebug() << "GlobalAlloc() failed with error " << GetLastError() << endl;
-        return false;
-    }
-    // Prepare SocketInfo structure for use.
-    SI->Socket = s;
-    SI->BytesSEND = 0;
-    SI->BytesRECV = 0;
-    SocketArray[EventTotal] = SI;
-    EventTotal++;
-
-    return true;
-}
-
-
-void Connection::FreeSocketInformation(DWORD Event)
-{
-    LPSOCKET_INFORMATION SI = SocketArray[Event];
-    DWORD i;
-    closesocket(SI->Socket);
-    GlobalFree(SI);
-    WSACloseEvent(EventArray[Event]);
-    // Squash the socket and event arrays
-    for (i = Event; i < EventTotal; i++)
-    {
-        EventArray[i] = EventArray[i + 1];
-        SocketArray[i] = SocketArray[i + 1];
-    }
-    EventTotal--;
-}

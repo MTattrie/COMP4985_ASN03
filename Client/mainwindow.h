@@ -16,11 +16,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_6_clicked();
 
-    void on_pushButton_8_clicked();
-
-    void on_ProgressSlider_sliderPressed();
 
 private:
     Ui::MainWindow *ui;

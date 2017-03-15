@@ -8,7 +8,14 @@
 #include <QDebug>
 #include <string>
 
-using namespace std;
+
+void CALLBACK WorkerRoutine(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags);
+
+
+Connection conn;
+SOCKET AcceptSocket;
+
 
 Server::Server(QObject *parent) : QObject(parent)
 {
@@ -17,84 +24,106 @@ Server::Server(QObject *parent) : QObject(parent)
 
 
 void Server::startTCP(){
-    Connection c;
 
-    SOCKET Listen;
-    SOCKET Accept;
-    SOCKADDR_IN InternetAddr;
-    DWORD Event;
-    WSANETWORKEVENTS NetworkEvents;
-    WSADATA wsaData;
+    SOCKET ListenSocket;
+    WSAEVENT AcceptEvent;
 
-    c._WSAStartup(wsaData);
-    c._SocketTCP(Listen);
-    c.CreateSocketInformation(Listen);
-    c._WSAEventSelect(Listen, FD_ACCEPT|FD_CLOSE);
+    if(!conn.WSAStartup())
+        return;
+    if(!conn.WSASocket_TCP(ListenSocket))
+        return;
+    if(!conn.bind(ListenSocket))
+        return;
+    if(!conn.listen(ListenSocket))
+        return;
+    if(!conn.WSACreateEvent(AcceptEvent))
+        return;
 
-    InternetAddr.sin_family = AF_INET;
-    InternetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    InternetAddr.sin_port = htons(PORT_TCP);
-
-    c._Bind(Listen, InternetAddr);
-    c._Listen(Listen);
+    std::thread(&Server::workerThread, this, AcceptEvent).detach();
 
     while(TRUE)
     {
-        c._WSAWaitForMultipleEvents(Event);
-        c._WSAEnumNetworkEvents(Event, NetworkEvents);
+        AcceptSocket = accept(ListenSocket, NULL, NULL);
 
-        if(!c.ReceiveNewConnection(Accept, Event, NetworkEvents)){
-            break;
-        }
-
-        string buffer;
-        c.ReadData(buffer, NetworkEvents, Event);
-
-        QString log = QString::fromStdString(buffer);
-        emit update_log(log);
-
-        if(!c.CloseSocket(Event, NetworkEvents)){
-            break;
-        }
+        if(!conn.WSASetEvent(AcceptEvent))
+            return;
     }
 }
 
-void Server::startUDP(){
-    Connection c;
 
-    SOCKET Listen;
-    SOCKADDR_IN InternetAddr;
-    DWORD Event;
-    WSANETWORKEVENTS NetworkEvents;
-    WSADATA wsaData;
+void Server::workerThread(WSAEVENT event)
+{
+    LPSOCKET_INFORMATION SocketInfo;
+    WSAEVENT EventArray[1];
 
-    c._WSAStartup(wsaData);
-    c._SocketUDP(Listen);
-
-    InternetAddr.sin_family = AF_INET;
-    InternetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    InternetAddr.sin_port = htons(PORT_UDP);
-
-    c._Bind(Listen, InternetAddr);
-
+    EventArray[0] = event;
     while(TRUE)
     {
-
-        char buf[1024];
-        int nbytes;
-        if ((nbytes = recv(Listen, buf, 1024, 0)) < 0)
-        {
-            perror ("recvfrom error");
-        }
-
-        string buffer(buf);
-
-        QString log = QString::fromStdString(buffer);
-        emit update_log2(log);
-
-        if(!c.CloseSocket(Event, NetworkEvents)){
+        if(!conn.WSAWaitForMultipleEvents(EventArray))
             break;
-        }
+        if(!conn.createSocketInfo(SocketInfo, AcceptSocket))
+            break;
+        if(!conn.WSARecv(SocketInfo, WorkerRoutine))
+            break;
+
+        qDebug() << "Socket " << AcceptSocket << " connected" << endl;
     }
+    exit(1);
 }
 
+
+void CALLBACK WorkerRoutine(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+{
+    (void)InFlags;//this is not used, but cannot be removed without breaking the callback.
+
+    // Reference the WSAOVERLAPPED structure as a SOCKET_INFORMATION structure
+    LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
+
+    if (Error != 0)
+    {
+        qDebug() << "I/O operation failed with error " << Error << endl;
+        closesocket(SI->Socket);
+        GlobalFree(SI);
+        return;
+    }
+    if (BytesTransferred == 0)
+    {
+        qDebug() << "Closing socket " << SI->Socket << endl;
+        closesocket(SI->Socket);
+        GlobalFree(SI);
+        return;
+    }
+
+    // Check to see if the BytesRECV field equals zero. If this is so, then
+    // this means a WSARecv call just completed so update the BytesRECV field
+    // with the BytesTransferred value from the completed WSARecv() call.
+    if (SI->BytesRECV == 0)
+    {
+        SI->BytesRECV = BytesTransferred;
+        SI->BytesSEND = 0;
+    }
+    else
+    {
+        SI->BytesSEND += BytesTransferred;
+    }
+
+    if (SI->BytesRECV > SI->BytesSEND)
+    {
+        // Post another WSASend() request.
+        // Since WSASend() is not gauranteed to send all of the bytes requested,
+        // continue posting WSASend() calls until all received bytes are sent.
+        ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+        SI->DataBuf.buf = SI->Buffer + SI->BytesSEND;
+        SI->DataBuf.len = SI->BytesRECV - SI->BytesSEND;
+        conn.WSASend(SI, WorkerRoutine);
+    }
+    else
+    {
+        SI->BytesRECV = 0;
+        ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+        SI->DataBuf.len = DATA_BUFSIZE;
+        SI->DataBuf.buf = SI->Buffer;
+        conn.WSARecv(SI, WorkerRoutine);
+    }
+}
