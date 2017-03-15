@@ -1,14 +1,12 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include  "server.h"
+#include <thread>
 
 Server     server;
 
 void s_startTCP(){
     server.startTCP();
-}
-void s_startUDP(){
-    server.startUDP();
 }
 
 int main(int argc, char *argv[])
@@ -18,8 +16,7 @@ int main(int argc, char *argv[])
     w.show();
 
 
-    //std::thread(s_startTCP).detach();
-    //std::thread(s_startUDP).detach();
+    std::thread(s_startTCP).detach();
 
     //QObject::connect(&server, SIGNAL( update_log(QString) ), &w, SLOT( output_log(QString) ));
     //QObject::connect(&server, SIGNAL( update_log2(QString) ), &w, SLOT( output_log2(QString) ));

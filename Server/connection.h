@@ -6,16 +6,15 @@
 #include <stdio.h>
 #include <string>
 
-using std::string;
 
-#define PORT_TCP 5150
-#define PORT_UDP 5151
-#define DATA_BUFSIZE 1024
+#define PORT 7000
+#define DATA_BUFSIZE 8192
 
 typedef struct _SOCKET_INFORMATION {
+   OVERLAPPED Overlapped;
+   SOCKET Socket;
    CHAR Buffer[DATA_BUFSIZE];
    WSABUF DataBuf;
-   SOCKET Socket;
    DWORD BytesSEND;
    DWORD BytesRECV;
 } SOCKET_INFORMATION, * LPSOCKET_INFORMATION;
@@ -26,13 +25,27 @@ class Connection
 
 
 public:
-    DWORD                EventTotal = 0;
-    WSAEVENT             EventArray[WSA_MAXIMUM_WAIT_EVENTS];
-    LPSOCKET_INFORMATION SocketArray[WSA_MAXIMUM_WAIT_EVENTS];
-
     Connection();
 
-    bool _WSAStartup(WSADATA &wsa);
+    void WSAError(std::string method, int error);
+
+    bool WSAStartup();
+    bool WSASocket_TCP(SOCKET &s);
+    bool listen(SOCKET &s);
+    bool bind(SOCKET &s);
+    bool WSACreateEvent(WSAEVENT &event);
+    bool WSASetEvent(WSAEVENT &event);
+
+    bool WSAWaitForMultipleEvents(WSAEVENT EventArray[]);
+    bool WSASend(LPSOCKET_INFORMATION &SI,
+            LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+    bool WSARecv(LPSOCKET_INFORMATION &SI,
+            LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+
+    bool createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET &s);
+
+
+    /*
     bool _WSAEventSelect(SOCKET &s, long lNetworkEvents);
     bool _SocketTCP(SOCKET &s);
     bool _SocketUDP(SOCKET &s);
@@ -46,13 +59,7 @@ public:
     bool _Send(SOCKET &s, char *sendbuf, int bytes);
     bool _Shutdown(SOCKET &s);
 
-
-    bool ReadData(string &buffer, WSANETWORKEVENTS &NetworkEvents, DWORD &Event);
-    bool ReceiveNewConnection(SOCKET &s, DWORD &Event, WSANETWORKEVENTS &NetworkEvents);
-    bool CloseSocket(DWORD &Event, WSANETWORKEVENTS &NetworkEvents);
-    bool CreateSocketInformation(SOCKET s);
-    void FreeSocketInformation(DWORD Event);
-
+*/
 
 
 };

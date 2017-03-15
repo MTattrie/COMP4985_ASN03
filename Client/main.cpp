@@ -1,5 +1,15 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include "client.h"
+#include <thread>
+
+
+Client client;
+
+void client_start(){
+    client.start();
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -7,5 +17,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
+
+    std::thread(client_start).detach();
+
     return a.exec();
 }

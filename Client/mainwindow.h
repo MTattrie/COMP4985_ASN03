@@ -23,12 +23,6 @@ public:
     void findAvailableSongs();
 private slots:
 
-    void on_button_addSong_clicked();
-
-    void on_button_play_clicked();
-
-    void handleStateChanged(QAudio::State newState);
-    void on_button_skip_clicked();
 
 private:
     Ui::MainWindow *ui;
