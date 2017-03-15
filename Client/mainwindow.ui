@@ -37,7 +37,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="button_play">
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -89,7 +89,7 @@
      <string>Fast Forward</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
+   <widget class="QPushButton" name="button_skip">
     <property name="geometry">
      <rect>
       <x>330</x>
@@ -138,7 +138,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QListView" name="listView">
+   <widget class="QListView" name="listView_playlist">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -148,7 +148,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QListView" name="listView_2">
+   <widget class="QListView" name="listView_availSongs">
     <property name="geometry">
      <rect>
       <x>430</x>
@@ -158,7 +158,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_6">
+   <widget class="QPushButton" name="button_addSong">
     <property name="geometry">
      <rect>
       <x>440</x>
@@ -262,7 +262,7 @@
      <x>0</x>
      <y>0</y>
      <width>651</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
