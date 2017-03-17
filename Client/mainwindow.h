@@ -6,6 +6,7 @@
 #include <QStringListModel>
 #include <QDebug>
 #include <QAudioOutput>
+#include <QBuffer>
 #include "wavfile.h"
 
 
@@ -31,13 +32,20 @@ private slots:
     void handleStateChanged(QAudio::State newState);
     void on_button_skip_clicked();
 
+    void on_pushButton_5_clicked();
+
+    void on_pushButton_3_clicked();
+
 private:
     Ui::MainWindow *ui;
     QStringListModel *available_song_model;
     QStringListModel *playlist_model;
-    QFile sourceFile;   // class member.
     QAudioOutput* audio; // class member.
+    QBuffer *audioBuffer;
+    WavFile sourceFile;
+
     bool isPlaying;
+    bool isForwarding;
     bool isPaused;
 
     void playNextSong();
