@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     isPlaying = false;
     isPaused = false;
+    isForwarding = false;
 
     // Create model
     available_song_model = new QStringListModel(this);
@@ -56,6 +57,7 @@ void MainWindow::on_button_play_clicked()
 
 void MainWindow::initAudioOuput(){
     audio = new QAudioOutput();
+    audioBuffer = new QBuffer();
 }
 
 bool MainWindow::setAudioHeader(QAudioFormat format){
@@ -64,8 +66,10 @@ bool MainWindow::setAudioHeader(QAudioFormat format){
         qWarning() << "Raw audio format not supported by backend, cannot play audio.";
         return false;
     }
-
+    delete audio;
+    delete audioBuffer;
     audio = new QAudioOutput(format, this);
+    audioBuffer = new QBuffer();
     connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
 
     return true;
@@ -81,23 +85,22 @@ void MainWindow::playNextSong(){
             audio->resume();
             return;
         }
-        qDebug() << "Before Wav";
 
-        WavFile sourceFile;
-        qDebug() << "Before Open File";
-
-        //sourceFile.setFileName("../assets/musics/" + playlist_model->stringList().at(0));
         if(!sourceFile.open("../assets/musics/" + playlist_model->stringList().at(0)))
             return;
 
-        qDebug() << "Open File";
 
         if(!setAudioHeader(sourceFile.fileFormat()))
             return;
 
-        qDebug() << "Set Header";
-
-        audio->start(&sourceFile);
+        isForwarding = false;
+        QByteArray data = sourceFile.readAll();
+        audioBuffer->open(QIODevice::ReadWrite);
+        audioBuffer->reset();
+        audioBuffer->seek(0);
+        audioBuffer->write(data);
+        audioBuffer->seek(0);
+        audio->start(audioBuffer);
         QEventLoop loop;
         do {
             loop.exec();
@@ -151,4 +154,36 @@ void MainWindow::on_button_skip_clicked()
         sourceFile.close();
         playNextSong();
     }
+}
+
+void MainWindow::on_pushButton_5_clicked()
+{
+
+    int samplebytes = sourceFile.fileFormat().bytesForDuration(1000000);
+    qint64 pos = audioBuffer->pos() - samplebytes;
+
+    qDebug()<< samplebytes;
+
+    if(pos<=0)
+        pos = 0;
+    audioBuffer->seek(0);
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    if(!isPlaying)
+        return;
+    QAudioFormat format = sourceFile.fileFormat();
+    if(isForwarding){
+        format.setSampleRate(format.sampleRate());
+        isForwarding = false;
+    }else {
+        format.setSampleRate(format.sampleRate() * 2);
+        isForwarding = true;
+    }
+    delete audio;
+    audio = new QAudioOutput(format, this);
+    connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
+
+    audio->start(audioBuffer);
 }
