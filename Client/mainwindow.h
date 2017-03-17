@@ -6,6 +6,7 @@
 #include <QStringListModel>
 #include <QDebug>
 #include <QAudioOutput>
+#include "wavfile.h"
 
 
 namespace Ui {
@@ -41,6 +42,7 @@ private:
 
     void playNextSong();
     void initAudioOuput();
+    bool setAudioHeader(QAudioFormat format);
 
 
 };
