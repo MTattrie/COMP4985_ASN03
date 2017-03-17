@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-    std::thread(client_start).detach();
+    //std::thread(client_start).detach();
 
     return a.exec();
 }

@@ -19,9 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listView_playlist->setModel(playlist_model);
 
     findAvailableSongs();
-
     initAudioOuput();
-
 }
 void MainWindow::findAvailableSongs(){
     QStringList nameFilter("*.wav");
@@ -57,23 +55,20 @@ void MainWindow::on_button_play_clicked()
 }
 
 void MainWindow::initAudioOuput(){
-    QAudioFormat format;
-    // Set up the format, eg.
-    format.setSampleRate(44100);
-    format.setChannelCount(2);
-    format.setSampleSize(16);
-    format.setCodec("audio/pcm");
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::UnSignedInt);
+    audio = new QAudioOutput();
+}
 
+bool MainWindow::setAudioHeader(QAudioFormat format){
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
     if (!info.isFormatSupported(format)) {
         qWarning() << "Raw audio format not supported by backend, cannot play audio.";
-        return;
+        return false;
     }
 
     audio = new QAudioOutput(format, this);
     connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
+
+    return true;
 }
 
 void MainWindow::playNextSong(){
@@ -81,16 +76,26 @@ void MainWindow::playNextSong(){
         if(playlist_model->stringList().length() <= 0)
             return;
         isPlaying = true;
-
-        if(audio && audio->state() == QAudio::SuspendedState){
+        qDebug() << audio;
+        if(audio->state() == QAudio::SuspendedState){
             audio->resume();
             return;
         }
+        qDebug() << "Before Wav";
 
-        QFile sourceFile;
-        sourceFile.setFileName("../assets/musics/" + playlist_model->stringList().at(0));
-        sourceFile.open(QIODevice::ReadOnly);
+        WavFile sourceFile;
+        qDebug() << "Before Open File";
 
+        //sourceFile.setFileName("../assets/musics/" + playlist_model->stringList().at(0));
+        if(!sourceFile.open("../assets/musics/" + playlist_model->stringList().at(0)))
+            return;
+
+        qDebug() << "Open File";
+
+        if(!setAudioHeader(sourceFile.fileFormat()))
+            return;
+
+        qDebug() << "Set Header";
 
         audio->start(&sourceFile);
         QEventLoop loop;
