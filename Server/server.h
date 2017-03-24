@@ -12,10 +12,12 @@ public:
 
     void startTCP();
     void startUDP();
+    void runTCP();
 
-    void workerThread(WSAEVENT event);
+    void workerThreadTCP(WSAEVENT event);
 
-
+    static void CALLBACK WorkerRoutineTCP(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
 
 
 signals:

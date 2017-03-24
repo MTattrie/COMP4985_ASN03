@@ -10,6 +10,10 @@
 #define PORT 7000
 #define DATA_BUFSIZE 8192
 
+#define MODE_SEND    0
+#define MODE_RECEIVE 1
+#define MODE_COMMAND 2
+
 typedef struct _SOCKET_INFORMATION {
    OVERLAPPED Overlapped;
    SOCKET Socket;
@@ -17,6 +21,7 @@ typedef struct _SOCKET_INFORMATION {
    WSABUF DataBuf;
    DWORD BytesSEND;
    DWORD BytesRECV;
+   int mode;
 } SOCKET_INFORMATION, * LPSOCKET_INFORMATION;
 
 
@@ -30,7 +35,8 @@ public:
     void WSAError(std::string method, int error);
 
     bool WSAStartup();
-    bool WSASocket_TCP(SOCKET &s);
+    bool WSASocketTCP(SOCKET &s);
+    bool WSASocketUDP(SOCKET &s);
     bool listen(SOCKET &s);
     bool bind(SOCKET &s);
     bool WSACreateEvent(WSAEVENT &event);
@@ -43,23 +49,10 @@ public:
             LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
     bool createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET &s);
+    bool checkError(LPSOCKET_INFORMATION &SI, DWORD error);
+    bool checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred);
 
-
-    /*
-    bool _WSAEventSelect(SOCKET &s, long lNetworkEvents);
-    bool _SocketTCP(SOCKET &s);
-    bool _SocketUDP(SOCKET &s);
-    bool _Bind(SOCKET &s, SOCKADDR_IN &InternetAddr);
-    bool _Connect(SOCKET &s, SOCKADDR_IN &clientService);
-    bool _Listen(SOCKET &s);
-    bool _WSAWaitForMultipleEvents(DWORD &Event);
-    bool _WSAEnumNetworkEvents(DWORD &Event, WSANETWORKEVENTS &NetworkEvents);
-    bool _Accept(SOCKET &s, DWORD &Event);
-    bool _WSARecv(LPSOCKET_INFORMATION &SocketInfo, DWORD &Event);
-    bool _Send(SOCKET &s, char *sendbuf, int bytes);
-    bool _Shutdown(SOCKET &s);
-
-*/
+    bool setsockopt(int &socket, int level, int option, const char* value);
 
 
 };
