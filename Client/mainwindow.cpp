@@ -187,3 +187,14 @@ void MainWindow::on_pushButton_3_clicked()
 
     audio->start(audioBuffer);
 }
+
+void MainWindow::on_button_download_clicked()
+{
+    QModelIndex index = ui->listView_availSongs->currentIndex();
+    if(index.row() < 0)
+        return;
+
+    QString itemText = index.data(Qt::DisplayRole).toString();
+
+    emit requestSong(itemText);
+}
