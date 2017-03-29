@@ -62,7 +62,7 @@ void Server::workerThreadTCP(WSAEVENT event) {
         if(!conn.WSARecv(SocketInfo, WorkerRoutineTCP))
             break;
 
-        qDebug() << "Socket " << AcceptSocket << " connected" << endl;
+        qDebug() << "Server::workerThreadTCP() Socket " << AcceptSocket << " connected";
     }
 }
 
@@ -99,7 +99,6 @@ void CALLBACK Server::WorkerRoutineTCP(DWORD Error, DWORD BytesTransferred,
         SI->DataBuf.len = DATA_BUFSIZE;
         SI->DataBuf.buf = SI->Buffer;
         conn.WSARecv(SI, WorkerRoutineTCP);
-        qDebug() << "buffer:" << SI->Buffer << endl;
     }
 }
 

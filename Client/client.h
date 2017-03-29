@@ -15,7 +15,9 @@ public:
     explicit Client(QObject *parent = 0);
 
     void startTCP();
+    void connectTCP();
     void runTCP();
+
 
     void workerThreadTCP(WSAEVENT event);
 

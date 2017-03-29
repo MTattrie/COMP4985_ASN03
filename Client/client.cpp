@@ -20,43 +20,45 @@ SOCKET sd_tcp;
 
 
 void Client::startTCP(){
+    std::thread(&Client::connectTCP, this).detach();
+}
+
+
+void Client::connectTCP(){
+    if(!conn.WSAStartup())
+        return;
     runTCP();
     WSACleanup();
     closesocket (sd_tcp);
+    qDebug() << "Client::connectTCP() Socket " << sd_tcp << " closed";
 }
 
 
 void Client::runTCP(){
-
+    WSAEVENT readEvent;
+    char rbuf[DATA_BUFSIZE];
     string host = "localhost";
-    int port =	SERVER_TCP_PORT;
+    int port =	7000;
 
-    if(!conn.WSAStartup())
-        return;
     if(!conn.WSASocketTCP(sd_tcp))
         return;
     if(!conn.connect(sd_tcp, host, port))
         return;
-
-    char sbuf[DATA_BUFSIZE];
-
-    QString header = "HEADER REQUEST SONG: ";
-    header.append("song");
-    header.append(" HEADER");
-
-    memset((char *)sbuf, 0, sizeof(sbuf));
-    memcpy(sbuf, header.toStdString().c_str(), sizeof(sbuf));
-
-    if(!conn.WSASend(sd_tcp, sbuf))
+    if(!conn.WSACreateEvent(readEvent))
+        return;
+    if(!conn.WSAEventSelect(sd_tcp, readEvent, FD_READ))
         return;
 
-//    char rbuf[DATA_BUFSIZE];
-//    while(true) {
-//        if(!conn.WSARecv(sd_tcp, rbuf))
-//            return;
+    while(true) {
+        if(!conn.WSAWaitForMultipleEvents(readEvent))
+            return;
+        WSAResetEvent(readEvent);
 
-//        qDebug() << "Socket " << sd_tcp << " connected" << endl;
-//    }
+        if(!conn.recv(sd_tcp, rbuf))
+            continue;
+
+        //Handle received songs / lists here.
+    }
 }
 
 
@@ -70,9 +72,12 @@ void Client::requestSong(QString song){
     memset((char *)sbuf, 0, DATA_BUFSIZE);
     memcpy(sbuf, header.toStdString().c_str(), DATA_BUFSIZE);
 
-    if(!conn.WSASend(sd_tcp, sbuf))
+    if(!conn.send(sd_tcp, sbuf))
         return;
 }
+
+
+
 
 
 
