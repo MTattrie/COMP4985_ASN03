@@ -78,6 +78,15 @@ bool Connection::WSACreateEvent(WSAEVENT &event){
     return true;
 }
 
+bool Connection::WSAEventSelect(SOCKET &sd, WSAEVENT &event, long networkEvents){
+    if (::WSAEventSelect(sd, event, networkEvents) == SOCKET_ERROR)
+    {
+        qDebug() << "Connection::WSAEventSelect() failed with error " << WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
 
 bool Connection::WSASetEvent(WSAEVENT &event){
     if (::WSASetEvent(event) == FALSE)

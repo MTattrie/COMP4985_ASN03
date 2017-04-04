@@ -13,10 +13,17 @@ public:
     void startTCP();
     void startUDP();
     void runTCP();
+    void connect();
 
     void workerThreadTCP(WSAEVENT event);
 
-    static void CALLBACK WorkerRoutineTCP(DWORD Error, DWORD BytesTransferred,
+    static void CALLBACK WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
+
+    static void CALLBACK WorkerRoutine_SendSong(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
+
+    static void CALLBACK WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
             LPWSAOVERLAPPED Overlapped, DWORD InFlags);
 
 
