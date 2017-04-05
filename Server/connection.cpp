@@ -78,6 +78,15 @@ bool Connection::WSACreateEvent(WSAEVENT &event){
     return true;
 }
 
+bool Connection::WSAEventSelect(SOCKET &sd, WSAEVENT &event, long networkEvents){
+    if (::WSAEventSelect(sd, event, networkEvents) == SOCKET_ERROR)
+    {
+        qDebug() << "Connection::WSAEventSelect() failed with error " << WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
 
 bool Connection::WSASetEvent(WSAEVENT &event){
     if (::WSASetEvent(event) == FALSE)
@@ -122,6 +131,8 @@ bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s){
     SocketInfo->DataBuf.len = DATA_BUFSIZE;
     SocketInfo->DataBuf.buf = SocketInfo->Buffer;
 
+    memset(SocketInfo->Buffer, 0, sizeof(SocketInfo->Buffer));
+
     qDebug() << "Connection::createSocketInfo() Socket " << s << " connected";
     return true;
 }
@@ -145,13 +156,12 @@ bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
 }
 
 
-bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
-        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
+bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI){
     DWORD SendBytes = 0;
     int	client_len = sizeof(SI->client_address);
     if (::WSASendTo(SI->socket_tcp, &(SI->DataBuf), 1, &SendBytes, 0,
             (struct sockaddr *)&(SI->client_address), client_len,
-            &(SI->Overlapped), lpCompletionRoutine) == SOCKET_ERROR)
+            0, NULL) == SOCKET_ERROR)
     {
         if (WSAGetLastError() != WSA_IO_PENDING)
         {
@@ -239,11 +249,14 @@ bool Connection::checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred)
 }
 
 
-bool Connection::setsockopt(int &socket, int level, int option, const char* value){
-    int nRet = ::setsockopt(socket, level, option, (char *)&value, sizeof(value));
+bool Connection::setsockopt(SOCKET &s, int level, int option, const char* value){
+    int nRet = ::setsockopt(s, level, option, (char *)&value, sizeof(value));
     if (nRet == SOCKET_ERROR) {
         qDebug() << "Connection::setsockopt() Failed with error " << WSAGetLastError();
         return false;
     }
     return true;
 }
+
+
+

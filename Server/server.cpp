@@ -17,6 +17,8 @@ SOCKET socket_tcp_listen;
 SOCKET socket_udp;
 int port = 7000;
 
+std::vector<LPSOCKET_INFORMATION> client_addresses;
+
 
 Server::Server(QObject *parent) : QObject(parent)
 {
@@ -52,38 +54,70 @@ void Server::connect(){
 
 
 void Server::runTCP() {
-    WSAEVENT AcceptEvent;
-    if(!conn.WSACreateEvent(AcceptEvent))
+    WSAEVENT acceptEvent;
+    if(!conn.WSACreateEvent(acceptEvent))
         return;
-//    if(!conn.WSAEventSelect(sd_tcp, readEvent, FD_READ))
-//        return;
 
-    std::thread(&Server::workerThreadTCP, this, AcceptEvent).detach();
+    std::thread(&Server::acceptThread, this, acceptEvent).detach();
+    std::thread(&Server::UDPMulticast, this).detach();
 
     while(TRUE) {
         socket_tcp_accept = accept(socket_tcp_listen, NULL, NULL);
-        if(!conn.WSASetEvent(AcceptEvent))
+        if(!conn.WSASetEvent(acceptEvent))
             return;
     }
 }
 
 
-void Server::workerThreadTCP(WSAEVENT AcceptEvent) {
-    LPSOCKET_INFORMATION SocketInfo;
+void Server::acceptThread(WSAEVENT acceptEvent) {
 
     while(true) {
-
-        if(!conn.WSAWaitForMultipleEvents(AcceptEvent))
+        if(!conn.WSAWaitForMultipleEvents(acceptEvent))
             break;
-        if(!conn.createSocketInfo(SocketInfo, socket_tcp_accept))
-            break;
-        qDebug() << endl << "Server::workerThreadTCP New Transfer:";
-        if(!conn.WSARecvFrom(SocketInfo, WorkerRoutine_RecvCommand))
-            break;
-        qDebug() << "Server::workerThreadTCP() After recv:";
+        std::thread(&Server::readThread, this).detach();
+        qDebug() << "Server::acceptThread() New Connection:";
     }
-    qDebug() << "workerThreadTCP() Closing WorkerThread:";
+    qDebug() << "acceptThread() Closing acceptThread:";
 }
+
+
+void Server::readThread(){
+    LPSOCKET_INFORMATION SI;
+    WSAEVENT readEvent;
+
+    if(!conn.createSocketInfo(SI, socket_tcp_accept))
+        return;
+
+    if(!conn.WSACreateEvent(readEvent))
+        return;
+    if(!conn.WSAEventSelect(SI->socket_tcp, readEvent, FD_READ))
+        return;
+
+    client_addresses.push_back(SI);
+
+
+    while(true){
+        if(!conn.WSAWaitForMultipleEvents(readEvent))
+            break;
+
+        ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+        SI->BytesSEND = 0;
+        SI->BytesRECV = 0;
+        SI->DataBuf.len = DATA_BUFSIZE;
+        SI->DataBuf.buf = SI->Buffer;
+        memset(SI->Buffer, 0, sizeof(SI->Buffer));
+
+
+
+        qDebug() << endl << "Server::readThread() New Read Event:";
+        if(!conn.WSARecvFrom(SI, WorkerRoutine_RecvCommand))
+            break;
+    }
+    qDebug() << "readThread() Closing readThread:";
+}
+
+
+
 
 
 void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
@@ -99,17 +133,17 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
         return;
 
     ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+    SI->BytesRECV += BytesTransferred;
+    SI->DataBuf.buf = SI->Buffer + SI->BytesRECV;
+    SI->DataBuf.len = DATA_BUFSIZE - SI->BytesRECV;
 
     if(SI->BytesRECV < DATA_BUFSIZE){
-        SI->BytesRECV += BytesTransferred;
-        SI->DataBuf.buf = SI->Buffer + SI->BytesRECV;
-        SI->DataBuf.len = DATA_BUFSIZE - SI->BytesRECV;
-        qDebug() << "inside RECV---------";
         conn.WSARecv(SI, WorkerRoutine_RecvCommand);
     }
-
     if(SI->BytesRECV >= DATA_BUFSIZE){
+        //parse paccket
         //String packet(SI->Buffer);
+
         int command = 1;
         //parse command
         SI->DataBuf.buf = SI->Buffer;
@@ -124,6 +158,7 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
             return;
         }
     }
+
 }
 
 
@@ -153,112 +188,31 @@ void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred
 
 
 
+void Server::UDPMulticast(){
+    char buff[DATA_BUFSIZE] = "stuff stuff stuff";
+
+    while(true){
+
+        qDebug() << endl << "UDPMulticaset() Start sending to group.";
+        for(auto& SI: client_addresses){
+            qDebug() << "UDPMulticaset() Send to address: " << inet_ntoa(SI->client_address.sin_addr);
+
+            SI->DataBuf.buf = buff;
+            SI->DataBuf.len = DATA_BUFSIZE;
+
+            if(!conn.WSASendTo(SI)){
+                //close
+            }
+        }
+        qDebug() << "UDPMulticaset() finished sending to group.";
+        Sleep(2000);
+    }
+}
 
 
 
-//#define BUFSIZE     1024
-//#define MAXADDRSTR  16
-
-//#define TIMECAST_TTL    2
-//#define TIMECAST_INTRVL 30
-
-//void Server::UDPMulticaset(){
-//    char achMCAddr[MAXADDRSTR] = "234.5.6.7";
-//    u_short nPort              = 8910;
-//    u_long  lTTL               = TIMECAST_TTL;
-//    u_short nInterval          = TIMECAST_INTRVL;
-//    SYSTEMTIME stSysTime;
-
-//    int nRet;
-//    BOOL  fFlag;
-//    SOCKADDR_IN stDstAddr;
-//    struct ip_mreq stMreq;        /* Multicast interface structure */
-//    SOCKET hSocket;
 
 
-//    /* Join the multicast group
-//    *
-//    * NOTE: According to RFC 1112, a sender does not need to join the
-//    *  group, however Microsoft requires a socket to join a group in
-//    *  order to use setsockopt() IP_MULTICAST_TTL (or fails with error
-//    *  WSAEINVAL).
-//    */
-//    stMreq.imr_multiaddr.s_addr = inet_addr(achMCAddr);
-//    stMreq.imr_interface.s_addr = INADDR_ANY;
 
 
-//    nRet = setsockopt(socket_udp,
-//     IPPROTO_IP,
-//     IP_ADD_MEMBERSHIP,
-//     (char *)&stMreq,
-//     sizeof(stMreq));
-//    if (nRet == SOCKET_ERROR) {
-//    printf (
-//      "setsockopt() IP_ADD_MEMBERSHIP address %s failed, Err: %d\n",
-//      achMCAddr, WSAGetLastError());
-//    }
-
-//    /* Set IP TTL to traverse up to multiple routers */
-//    nRet = setsockopt(socket_udp,
-//     IPPROTO_IP,
-//     IP_MULTICAST_TTL,
-//     (char *)&lTTL,
-//     sizeof(lTTL));
-//    if (nRet == SOCKET_ERROR) {
-//    printf ("setsockopt() IP_MULTICAST_TTL failed, Err: %d\n",
-//      WSAGetLastError());
-//    }
-
-//    /* Disable loopback */
-//    fFlag = FALSE;
-//    nRet = setsockopt(socket_udp,
-//     IPPROTO_IP,
-//     IP_MULTICAST_LOOP,
-//     (char *)&fFlag,
-//     sizeof(fFlag));
-//    if (nRet == SOCKET_ERROR) {
-//    printf ("setsockopt() IP_MULTICAST_LOOP failed, Err: %d\n",
-//      WSAGetLastError());
-//    }
-
-//    /* Assign our destination address */
-//    stDstAddr.sin_family =      AF_INET;
-//    stDstAddr.sin_addr.s_addr = inet_addr(achMCAddr);
-//    stDstAddr.sin_port =        htons(nPort);
-//    for (;;) {
-//        /* Get System (UTC) Time */
-//        GetSystemTime (&stSysTime);
-
-//        /* Send the time to our multicast group! */
-//        nRet = sendto(socket_udp,
-//          (char *)&stSysTime,
-//          sizeof(stSysTime),
-//          0,
-//          (struct sockaddr*)&stDstAddr,
-//          sizeof(stDstAddr));
-//        if (nRet < 0) {
-//          printf ("sendto() failed, Error: %d\n", WSAGetLastError());
-//          exit(1);
-//        } else {
-//            printf("Sent UTC Time %02d:%02d:%02d:%03d ",
-//                stSysTime.wHour,
-//                stSysTime.wMinute,
-//                stSysTime.wSecond,
-//                stSysTime.wMilliseconds);
-//            printf("Date: %02d-%02d-%02d to: %s:%d\n",
-//                stSysTime.wMonth,
-//                stSysTime.wDay,
-//                stSysTime.wYear,
-//                inet_ntoa(stDstAddr.sin_addr),
-//                ntohs(stDstAddr.sin_port));
-//        }
-
-//        Sleep(nInterval*1000);
-
-//    }
-
-//    /* Close the socket */
-//    closesocket(hSocket);
-
-//}
 

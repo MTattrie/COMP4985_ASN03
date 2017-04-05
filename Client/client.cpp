@@ -6,6 +6,7 @@
 #include <thread>
 #include <QDebug>
 #include "connection.h"
+#include "packet.h"
 
 
 Client::Client(QObject *parent) : QObject(parent)
@@ -15,22 +16,32 @@ Client::Client(QObject *parent) : QObject(parent)
 
 
 Connection conn;
-SOCKET sd_tcp;
+SOCKET socket_tcp;
+SOCKET socket_udp;
 
 
 
-void Client::startTCP(){
-    std::thread(&Client::connectTCP, this).detach();
+void Client::startThreads(){
+    std::thread(&Client::startTCP, this).detach();
+    std::thread(&Client::startUDP, this).detach();
 }
 
-
-void Client::connectTCP(){
+void Client::startTCP(){
     if(!conn.WSAStartup())
         return;
     runTCP();
     WSACleanup();
-    closesocket (sd_tcp);
-    qDebug() << "Client::connectTCP() Socket " << sd_tcp << " closed";
+    closesocket (socket_tcp);
+    qDebug() << "Client::startTCP() Socket " << socket_tcp << " closed";
+}
+
+void Client::startUDP(){
+    if(!conn.WSAStartup())
+        return;
+    runUDP();
+    WSACleanup();
+    closesocket (socket_udp);
+    qDebug() << "Client::startUDP() Socket " << socket_tcp << " closed";
 }
 
 
@@ -40,13 +51,15 @@ void Client::runTCP(){
     string host = "localhost";
     int port =	7000;
 
-    if(!conn.WSASocketTCP(sd_tcp))
+    if(!conn.WSASocketTCP(socket_tcp))
         return;
-    if(!conn.connect(sd_tcp, host, port))
+    if(!conn.setsockopt(socket_tcp, SOL_SOCKET, SO_REUSEADDR))
+        return;
+    if(!conn.connect(socket_tcp, host, port))
         return;
     if(!conn.WSACreateEvent(readEvent))
         return;
-    if(!conn.WSAEventSelect(sd_tcp, readEvent, FD_READ))
+    if(!conn.WSAEventSelect(socket_tcp, readEvent, FD_READ))
         return;
 
     while(true) {
@@ -54,10 +67,31 @@ void Client::runTCP(){
             return;
         WSAResetEvent(readEvent);
 
-        if(!conn.recv(sd_tcp, rbuf))
+        if(!conn.recv(socket_tcp, rbuf))
             continue;
 
         //Handle received songs / lists here.
+    }
+}
+
+
+
+void Client::runUDP(){
+    int port =	7000;
+    char rbuf[DATA_BUFSIZE];
+
+    if(!conn.WSASocketUDP(socket_udp))
+        return;
+    if(!conn.setsockopt(socket_udp, SOL_SOCKET, SO_REUSEADDR))
+        return;
+
+    if(!conn.bind(socket_udp, port))
+        return;
+
+    while (true) {
+        if(!conn.recv(socket_tcp, rbuf))
+            continue;
+        qDebug() << "UDP stream: " << rbuf;
     }
 }
 
@@ -69,12 +103,20 @@ void Client::requestSong(QString song){
     header.append(song);
     header.append(" HEADER");
 
+//    CommandPacket packet;
+//    packet.command = Command::SEND;
+//    packet.song = song.toStdString();
+
     memset((char *)sbuf, 0, DATA_BUFSIZE);
     memcpy(sbuf, header.toStdString().c_str(), DATA_BUFSIZE);
 
-    if(!conn.send(sd_tcp, sbuf))
+    if(!conn.send(socket_tcp, sbuf))
         return;
 }
+
+
+
+
 
 
 

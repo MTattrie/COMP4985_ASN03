@@ -15,7 +15,10 @@ public:
     void runTCP();
     void connect();
 
-    void workerThreadTCP(WSAEVENT event);
+    void acceptThread(WSAEVENT event);
+    void readThread();
+
+    void UDPMulticast();
 
     static void CALLBACK WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
             LPWSAOVERLAPPED Overlapped, DWORD InFlags);

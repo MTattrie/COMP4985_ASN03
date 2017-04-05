@@ -37,7 +37,7 @@ public:
     bool WSASocketTCP(SOCKET &s);
     bool WSASocketUDP(SOCKET &s);
 
-    bool setsockopt(int &socket, int level, int option, const char* value);
+    bool setsockopt(SOCKET &socket, int level, int option, const char* value);
     bool listen(SOCKET &s);
     bool bind(SOCKET &s, int port);
 
@@ -48,8 +48,9 @@ public:
 
     bool WSASend(LPSOCKET_INFORMATION &SI,
             LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
-    bool WSASendTo(LPSOCKET_INFORMATION &SI,
-            LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+
+    bool WSASendTo(LPSOCKET_INFORMATION &SI);//udp
+
     bool WSARecv(LPSOCKET_INFORMATION &SI,
             LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
     bool WSARecvFrom(LPSOCKET_INFORMATION SI,
@@ -58,6 +59,9 @@ public:
     bool createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s);
     bool checkError(LPSOCKET_INFORMATION &SI, DWORD error);
     bool checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred);
+
+    int join_group(int &sd, unsigned long grpaddr);
+    int leave_group(int &sd, unsigned long grpaddr);
 
 
 
