@@ -30,7 +30,8 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     connection.h \
-    server.h
+    server.h \
+    packet.h
 
 FORMS    += mainwindow.ui
 

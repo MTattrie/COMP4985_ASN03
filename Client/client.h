@@ -14,8 +14,12 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = 0);
 
+    void startThreads();
     void startTCP();
+    void startUDP();
     void runTCP();
+    void runUDP();
+
 
     void workerThreadTCP(WSAEVENT event);
 

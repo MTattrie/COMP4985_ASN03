@@ -32,7 +32,8 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
             client.h\
             wavfile.h \
-    connection.h
+    connection.h \
+    packet.h
 
 FORMS    += mainwindow.ui
 
