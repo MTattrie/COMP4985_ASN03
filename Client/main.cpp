@@ -7,7 +7,7 @@
 Client client;
 
 void client_start(){
-    client.start();
+    client.startTCP();
 }
 
 
@@ -18,7 +18,9 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-    //std::thread(client_start).detach();
+    std::thread(client_start).detach();
+
+    QObject::connect(&w, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
 
     return a.exec();
 }

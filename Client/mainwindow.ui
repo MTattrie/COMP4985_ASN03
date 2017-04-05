@@ -183,7 +183,7 @@
      <string>Add Song to Playlist</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_7">
+   <widget class="QPushButton" name="button_download">
     <property name="geometry">
      <rect>
       <x>540</x>

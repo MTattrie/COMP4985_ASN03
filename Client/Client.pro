@@ -26,11 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp\
         mainwindow.cpp \
         client.cpp \
-        wavfile.cpp
+        wavfile.cpp \
+    connection.cpp
 
 HEADERS  += mainwindow.h \
             client.h\
-            wavfile.h
+            wavfile.h \
+    connection.h
 
 FORMS    += mainwindow.ui
 
