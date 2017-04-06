@@ -24,6 +24,14 @@ Server::Server(QObject *parent) : QObject(parent)
 {
 
 }
+bool Server::setPort(QString _port) {
+    bool convertOK;
+    port = _port.toInt(&convertOK);
+
+    if(!convertOK)
+        return false;
+    return true;
+}
 
 void Server::startTCP() {
     if(!conn.WSAStartup())
@@ -186,28 +194,40 @@ void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred
 
 }
 
+bool Server::multicast(char *message, const int len){
+    for(auto& SI: client_addresses){
+        qDebug() << "UDPMulticaset() Send to address: " << inet_ntoa(SI->client_address.sin_addr);
+        qDebug() << message;
+        SI->DataBuf.buf = message;
+        SI->DataBuf.len = len;
+
+        if(!conn.WSASendTo(SI)){
+            //close
+        }
+    }
+    return true;
+}
+
 
 
 void Server::UDPMulticast(){
-    char buff[DATA_BUFSIZE] = "stuff stuff stuff";
-
     while(true){
 
-        qDebug() << endl << "UDPMulticaset() Start sending to group.";
-        for(auto& SI: client_addresses){
-            qDebug() << "UDPMulticaset() Send to address: " << inet_ntoa(SI->client_address.sin_addr);
-
-            SI->DataBuf.buf = buff;
-            SI->DataBuf.len = DATA_BUFSIZE;
-
-            if(!conn.WSASendTo(SI)){
-                //close
-            }
+        if(!streamQueue.empty()){
+            qDebug() << endl << "UDPMulticaset() Start sending to group.";
+            QByteArray data = streamQueue.front();
+            multicast(data.data(), data.size());
+            streamQueue.pop_front();;
+            qDebug() << "UDPMulticaset() finished sending to group.";
+            //Sleep(2000);
         }
-        qDebug() << "UDPMulticaset() finished sending to group.";
-        Sleep(2000);
     }
 }
+
+void Server::addStreamData(QByteArray data){
+    streamQueue.push_back(data);
+}
+
 
 
 
