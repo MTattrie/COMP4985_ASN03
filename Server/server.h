@@ -12,10 +12,22 @@ public:
 
     void startTCP();
     void startUDP();
+    void runTCP();
+    void connect();
 
-    void workerThread(WSAEVENT event);
+    void acceptThread(WSAEVENT event);
+    void readThread();
 
+    void UDPMulticast();
 
+    static void CALLBACK WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
+
+    static void CALLBACK WorkerRoutine_SendSong(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
+
+    static void CALLBACK WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
 
 
 signals:

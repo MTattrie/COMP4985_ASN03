@@ -23,6 +23,10 @@ public:
     ~MainWindow();
 
     void findAvailableSongs();
+
+signals:
+    void requestSong(QString song);
+
 private slots:
 
     void on_button_addSong_clicked();
@@ -35,6 +39,8 @@ private slots:
     void on_pushButton_5_clicked();
 
     void on_pushButton_3_clicked();
+
+    void on_button_download_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -8,13 +8,16 @@
 #include <QDebug>
 #include <string>
 
-
-void CALLBACK WorkerRoutine(DWORD Error, DWORD BytesTransferred,
-        LPWSAOVERLAPPED Overlapped, DWORD InFlags);
+#include <ws2tcpip.h>
 
 
 Connection conn;
-SOCKET AcceptSocket;
+SOCKET socket_tcp_accept;
+SOCKET socket_tcp_listen;
+SOCKET socket_udp;
+int port = 7000;
+
+std::vector<LPSOCKET_INFORMATION> client_addresses;
 
 
 Server::Server(QObject *parent) : QObject(parent)
@@ -22,108 +25,194 @@ Server::Server(QObject *parent) : QObject(parent)
 
 }
 
-
-void Server::startTCP(){
-
-    SOCKET ListenSocket;
-    WSAEVENT AcceptEvent;
-
+void Server::startTCP() {
     if(!conn.WSAStartup())
         return;
-    if(!conn.WSASocket_TCP(ListenSocket))
+    connect();
+    closesocket(socket_tcp_accept);
+    closesocket(socket_tcp_listen);
+    closesocket(socket_udp);
+    WSACleanup();
+}
+
+
+void Server::connect(){
+    if(!conn.WSASocketTCP(socket_tcp_listen))
         return;
-    if(!conn.bind(ListenSocket))
+    if(!conn.bind(socket_tcp_listen, port))
         return;
-    if(!conn.listen(ListenSocket))
-        return;
-    if(!conn.WSACreateEvent(AcceptEvent))
+    if(!conn.listen(socket_tcp_listen))
         return;
 
-    std::thread(&Server::workerThread, this, AcceptEvent).detach();
+    if(!conn.WSASocketUDP(socket_udp))
+        return;
+    if(!conn.bind(socket_udp, port))
+        return;
 
-    while(TRUE)
-    {
-        AcceptSocket = accept(ListenSocket, NULL, NULL);
+    runTCP();
+}
 
-        if(!conn.WSASetEvent(AcceptEvent))
+
+void Server::runTCP() {
+    WSAEVENT acceptEvent;
+    if(!conn.WSACreateEvent(acceptEvent))
+        return;
+
+    std::thread(&Server::acceptThread, this, acceptEvent).detach();
+    std::thread(&Server::UDPMulticast, this).detach();
+
+    while(TRUE) {
+        socket_tcp_accept = accept(socket_tcp_listen, NULL, NULL);
+        if(!conn.WSASetEvent(acceptEvent))
             return;
     }
 }
 
 
-void Server::workerThread(WSAEVENT event)
-{
-    LPSOCKET_INFORMATION SocketInfo;
-    WSAEVENT EventArray[1];
+void Server::acceptThread(WSAEVENT acceptEvent) {
 
-    EventArray[0] = event;
-    while(TRUE)
-    {
-        if(!conn.WSAWaitForMultipleEvents(EventArray))
+    while(true) {
+        if(!conn.WSAWaitForMultipleEvents(acceptEvent))
             break;
-        if(!conn.createSocketInfo(SocketInfo, AcceptSocket))
-            break;
-        if(!conn.WSARecv(SocketInfo, WorkerRoutine))
-            break;
-
-        qDebug() << "Socket " << AcceptSocket << " connected" << endl;
+        std::thread(&Server::readThread, this).detach();
+        qDebug() << "Server::acceptThread() New Connection:";
     }
-    exit(1);
+    qDebug() << "acceptThread() Closing acceptThread:";
 }
 
 
-void CALLBACK WorkerRoutine(DWORD Error, DWORD BytesTransferred,
-        LPWSAOVERLAPPED Overlapped, DWORD InFlags)
-{
-    (void)InFlags;//this is not used, but cannot be removed without breaking the callback.
+void Server::readThread(){
+    LPSOCKET_INFORMATION SI;
+    WSAEVENT readEvent;
 
-    // Reference the WSAOVERLAPPED structure as a SOCKET_INFORMATION structure
-    LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
-
-    if (Error != 0)
-    {
-        qDebug() << "I/O operation failed with error " << Error << endl;
-        closesocket(SI->Socket);
-        GlobalFree(SI);
+    if(!conn.createSocketInfo(SI, socket_tcp_accept))
         return;
-    }
-    if (BytesTransferred == 0)
-    {
-        qDebug() << "Closing socket " << SI->Socket << endl;
-        closesocket(SI->Socket);
-        GlobalFree(SI);
-        return;
-    }
 
-    // Check to see if the BytesRECV field equals zero. If this is so, then
-    // this means a WSARecv call just completed so update the BytesRECV field
-    // with the BytesTransferred value from the completed WSARecv() call.
-    if (SI->BytesRECV == 0)
-    {
-        SI->BytesRECV = BytesTransferred;
+    if(!conn.WSACreateEvent(readEvent))
+        return;
+    if(!conn.WSAEventSelect(SI->socket_tcp, readEvent, FD_READ))
+        return;
+
+    client_addresses.push_back(SI);
+
+
+    while(true){
+        if(!conn.WSAWaitForMultipleEvents(readEvent))
+            break;
+
+        ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
         SI->BytesSEND = 0;
-    }
-    else
-    {
-        SI->BytesSEND += BytesTransferred;
-    }
-
-    if (SI->BytesRECV > SI->BytesSEND)
-    {
-        // Post another WSASend() request.
-        // Since WSASend() is not gauranteed to send all of the bytes requested,
-        // continue posting WSASend() calls until all received bytes are sent.
-        ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
-        SI->DataBuf.buf = SI->Buffer + SI->BytesSEND;
-        SI->DataBuf.len = SI->BytesRECV - SI->BytesSEND;
-        conn.WSASend(SI, WorkerRoutine);
-    }
-    else
-    {
         SI->BytesRECV = 0;
-        ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
         SI->DataBuf.len = DATA_BUFSIZE;
         SI->DataBuf.buf = SI->Buffer;
-        conn.WSARecv(SI, WorkerRoutine);
+        memset(SI->Buffer, 0, sizeof(SI->Buffer));
+
+
+
+        qDebug() << endl << "Server::readThread() New Read Event:";
+        if(!conn.WSARecvFrom(SI, WorkerRoutine_RecvCommand))
+            break;
+    }
+    qDebug() << "readThread() Closing readThread:";
+}
+
+
+
+
+
+void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags) {
+    (void)InFlags;//this is not used, but cannot be removed without breaking the callback.
+    LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
+
+    qDebug() << "Server::WorkerRoutine_RecvCommand receved " << BytesTransferred << " bytes. "
+             << "From Client Address " << inet_ntoa(SI->client_address.sin_addr)
+             << " DataBuf Contents: " << SI->DataBuf.buf;
+
+    if(!conn.checkError(SI, Error))
+        return;
+
+    ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+    SI->BytesRECV += BytesTransferred;
+    SI->DataBuf.buf = SI->Buffer + SI->BytesRECV;
+    SI->DataBuf.len = DATA_BUFSIZE - SI->BytesRECV;
+
+    if(SI->BytesRECV < DATA_BUFSIZE){
+        conn.WSARecv(SI, WorkerRoutine_RecvCommand);
+    }
+    if(SI->BytesRECV >= DATA_BUFSIZE){
+        //parse paccket
+        //String packet(SI->Buffer);
+
+        int command = 1;
+        //parse command
+        SI->DataBuf.buf = SI->Buffer;
+        SI->DataBuf.len = DATA_BUFSIZE;
+
+        switch(command){
+        case 1://send list using tcp
+            conn.WSASend(SI, WorkerRoutine_SendList);
+            return;
+        case 3:
+            //recv song
+            return;
+        }
+    }
+
+}
+
+
+void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags) {
+    (void)InFlags;//this is not used, but cannot be removed without breaking the callback.
+    LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
+
+    qDebug() << "Server::WorkerRoutine_SendList() Sent " << BytesTransferred << " bytes. "
+             << "Client Address " << inet_ntoa(SI->client_address.sin_addr)
+             << " DataBuf Contents: " << SI->DataBuf.buf;
+
+    if(!conn.checkError(SI, Error))
+        return;
+    if(!conn.checkFinished(SI, BytesTransferred)){
+        qDebug() << "End Transfer:" << endl;
+        return;
+    }
+
+    ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+    SI->BytesSEND += BytesTransferred;
+    SI->DataBuf.buf = SI->Buffer + SI->BytesSEND;
+    SI->DataBuf.len = DATA_BUFSIZE - SI->BytesSEND;
+    conn.WSASend(SI, WorkerRoutine_SendList);
+
+}
+
+
+
+void Server::UDPMulticast(){
+    char buff[DATA_BUFSIZE] = "stuff stuff stuff";
+
+    while(true){
+
+        qDebug() << endl << "UDPMulticaset() Start sending to group.";
+        for(auto& SI: client_addresses){
+            qDebug() << "UDPMulticaset() Send to address: " << inet_ntoa(SI->client_address.sin_addr);
+
+            SI->DataBuf.buf = buff;
+            SI->DataBuf.len = DATA_BUFSIZE;
+
+            if(!conn.WSASendTo(SI)){
+                //close
+            }
+        }
+        qDebug() << "UDPMulticaset() finished sending to group.";
+        Sleep(2000);
     }
 }
+
+
+
+
+
+
+
+
