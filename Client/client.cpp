@@ -41,7 +41,7 @@ void Client::startUDP(){
     runUDP();
     WSACleanup();
     closesocket (socket_udp);
-    qDebug() << "Client::startUDP() Socket " << socket_tcp << " closed";
+    qDebug() << "Client::startUDP() Socket " << socket_udp << " closed";
 }
 
 
@@ -82,15 +82,19 @@ void Client::runUDP(){
 
     if(!conn.WSASocketUDP(socket_udp))
         return;
+
     if(!conn.setsockopt(socket_udp, SOL_SOCKET, SO_REUSEADDR))
         return;
 
     if(!conn.bind(socket_udp, port))
         return;
+    qDebug() << "runUDP";
 
     while (true) {
-        if(!conn.recv(socket_tcp, rbuf))
+
+        if(!conn.recv(socket_udp, rbuf))
             continue;
+
         qDebug() << "UDP stream: " << rbuf;
     }
 }
