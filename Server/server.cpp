@@ -1,5 +1,6 @@
 #include "server.h"
 #include "connection.h"
+#include "packet.h"
 
 #include <winsock2.h>
 #include <windows.h>
@@ -7,8 +8,14 @@
 #include <thread>
 #include <QDebug>
 #include <string>
+#include <fstream>
+#include <queue>
 
 #include <ws2tcpip.h>
+
+using std::string;
+
+
 
 
 Connection conn;
@@ -19,11 +26,19 @@ int port = 7000;
 
 std::vector<LPSOCKET_INFORMATION> client_addresses;
 
+std::queue<string> packet_queue;
+
 
 Server::Server(QObject *parent) : QObject(parent)
 {
-
 }
+
+
+void Server::start(){
+    std::thread(&Server::startTCP, this).detach();
+    std::thread(&Server::startUDP, this).detach();
+}
+
 bool Server::setPort(QString _port) {
     bool convertOK;
     port = _port.toInt(&convertOK);
@@ -33,30 +48,27 @@ bool Server::setPort(QString _port) {
     return true;
 }
 
+
+
+
 void Server::startTCP() {
     if(!conn.WSAStartup())
         return;
-    connect();
+    connectTCP();
     closesocket(socket_tcp_accept);
     closesocket(socket_tcp_listen);
-    closesocket(socket_udp);
     WSACleanup();
 }
 
-
-void Server::connect(){
+void Server::connectTCP(){
     if(!conn.WSASocketTCP(socket_tcp_listen))
+        return;
+    if(!conn.setoptSO_REUSEADDR(socket_tcp_listen))
         return;
     if(!conn.bind(socket_tcp_listen, port))
         return;
     if(!conn.listen(socket_tcp_listen))
         return;
-
-    if(!conn.WSASocketUDP(socket_udp))
-        return;
-    if(!conn.bind(socket_udp, port))
-        return;
-
     runTCP();
 }
 
@@ -65,9 +77,7 @@ void Server::runTCP() {
     WSAEVENT acceptEvent;
     if(!conn.WSACreateEvent(acceptEvent))
         return;
-
     std::thread(&Server::acceptThread, this, acceptEvent).detach();
-    std::thread(&Server::UDPMulticast, this).detach();
 
     while(TRUE) {
         socket_tcp_accept = accept(socket_tcp_listen, NULL, NULL);
@@ -78,7 +88,6 @@ void Server::runTCP() {
 
 
 void Server::acceptThread(WSAEVENT acceptEvent) {
-
     while(true) {
         if(!conn.WSAWaitForMultipleEvents(acceptEvent))
             break;
@@ -95,14 +104,12 @@ void Server::readThread(){
 
     if(!conn.createSocketInfo(SI, socket_tcp_accept))
         return;
-
     if(!conn.WSACreateEvent(readEvent))
         return;
-    if(!conn.WSAEventSelect(SI->socket_tcp, readEvent, FD_READ))
+    if(!conn.WSAEventSelect(SI->Socket, readEvent, FD_READ))
         return;
 
     client_addresses.push_back(SI);
-
 
     while(true){
         if(!conn.WSAWaitForMultipleEvents(readEvent))
@@ -111,21 +118,16 @@ void Server::readThread(){
         ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
         SI->BytesSEND = 0;
         SI->BytesRECV = 0;
-        SI->DataBuf.len = DATA_BUFSIZE;
+        SI->DataBuf.len = BUFFERSIZE;
         SI->DataBuf.buf = SI->Buffer;
         memset(SI->Buffer, 0, sizeof(SI->Buffer));
 
-
-
-        qDebug() << endl << "Server::readThread() New Read Event:";
-        if(!conn.WSARecvFrom(SI, WorkerRoutine_RecvCommand))
+        //qDebug() << endl << "Server::readThread() New Read Event:";
+        if(!conn.WSARecv(SI, WorkerRoutine_RecvCommand))
             break;
     }
     qDebug() << "readThread() Closing readThread:";
 }
-
-
-
 
 
 void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
@@ -143,19 +145,32 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
     ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
     SI->BytesRECV += BytesTransferred;
     SI->DataBuf.buf = SI->Buffer + SI->BytesRECV;
-    SI->DataBuf.len = DATA_BUFSIZE - SI->BytesRECV;
+    SI->DataBuf.len = BUFFERSIZE - SI->BytesRECV;
 
-    if(SI->BytesRECV < DATA_BUFSIZE){
-        conn.WSARecv(SI, WorkerRoutine_RecvCommand);
-    }
-    if(SI->BytesRECV >= DATA_BUFSIZE){
-        //parse paccket
-        //String packet(SI->Buffer);
+    if(BytesTransferred == 0 && SI->BytesRECV == 0){
+        return;
+    }else if(BytesTransferred == 0 || SI->BytesRECV >= BUFFERSIZE){
 
-        int command = 1;
+        int command = SI->Buffer[0];
+
+        string filename(SI->Buffer + 1);
+        string filelocation = "../assets/musics/" + filename;
+        std::ifstream fin(filelocation, std::ios::in | std::ifstream::binary);
+        std::vector<char> buffer;
+        std::ofstream outfile ("../assets/musics/test1.wav", std::ios_base::app | std::ios_base::out | std::ios::binary);
+
+
+        std::copy(std::istream_iterator<char>(fin), std::istream_iterator<char>(), std::back_inserter(buffer));
+
+        for(size_t i = 0; i < buffer.size(); i += BUFFERSIZE) {
+            auto last = min(buffer.size(), i + BUFFERSIZE);
+            packet_queue.push(string(buffer.begin() + i, buffer.begin() + last));
+        }
+        outfile.close();
+
         //parse command
         SI->DataBuf.buf = SI->Buffer;
-        SI->DataBuf.len = DATA_BUFSIZE;
+        SI->DataBuf.len = BUFFERSIZE;
 
         switch(command){
         case 1://send list using tcp
@@ -165,6 +180,10 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
             //recv song
             return;
         }
+    }
+    else if(SI->BytesRECV < BUFFERSIZE){
+        qDebug()<<"BUFFERSIZE : " << BUFFERSIZE;
+        conn.WSARecv(SI, WorkerRoutine_RecvCommand);
     }
 
 }
@@ -189,7 +208,7 @@ void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred
     ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
     SI->BytesSEND += BytesTransferred;
     SI->DataBuf.buf = SI->Buffer + SI->BytesSEND;
-    SI->DataBuf.len = DATA_BUFSIZE - SI->BytesSEND;
+    SI->DataBuf.len = BUFFERSIZE - SI->BytesSEND;
     conn.WSASend(SI, WorkerRoutine_SendList);
 
 }
@@ -201,38 +220,140 @@ bool Server::multicast(char *message, const int len){
         SI->DataBuf.buf = message;
         SI->DataBuf.len = len;
 
-        if(!conn.WSASendTo(SI)){
+        //if(!conn.WSASendTo(SI->socket_udp, SI->DataBuf.buf)){
             //close
-        }
+        //}
     }
     return true;
 }
 
 
 
-void Server::UDPMulticast(){
-    while(true){
+void Server::startUDP() {
+    if(!conn.WSAStartup())
+        return;
+    connectUDP();
+    closesocket(socket_udp);
+    WSACleanup();
+}
 
-        if(!streamQueue.empty()){
-            qDebug() << endl << "UDPMulticaset() Start sending to group.";
-            QByteArray data = streamQueue.front();
-            multicast(data.data(), data.size());
-            streamQueue.pop_front();;
-            qDebug() << "UDPMulticaset() finished sending to group.";
-            //Sleep(2000);
+void Server::connectUDP(){
+    if(!conn.WSASocketUDP(socket_udp))
+        return;
+    if(!conn.setoptSO_REUSEADDR(socket_udp))
+        return;
+    if(!conn.bind(socket_udp, port))
+        return;
+    if(!conn.setoptIP_MULTICAST_TTL(socket_udp))
+        return;
+    if(!conn.setoptIP_MULTICAST_LOOP(socket_udp))
+        return;
+    if(!conn.setoptIP_ADD_MEMBERSHIP(socket_udp))
+        return;
+    runUDP();
+}
+
+void Server::runUDP(){
+
+    LPSOCKET_INFORMATION SI;
+    if(!conn.createSocketInfo(SI, socket_udp))
+        return;
+
+    int count = 0;
+
+    while(true){
+        if(streamQueue.isEmpty()){
+            count = 0;
+            continue;
         }
+
+        qDebug()<<++count;
+        QByteArray data = streamQueue.front();
+        SI->DataBuf.buf = data.data();
+        SI->DataBuf.len = data.size();
+        SI->BytesToSend = data.size();
+        SI->BytesSEND = 0;
+        qDebug()<<"BytesToSend : " << SI->BytesToSend;
+
+        if(!conn.WSASendTo(SI, WorkerRoutine_UDPSend)) {
+            continue;
+        }
+
+        qDebug() << "UDPMulticaset() finished sending to group.";
+        streamQueue.pop_front();
     }
+    /*
+    while(true){
+        //Sleep(2000);
+
+
+        if(packet_queue.empty()){
+            count = 0;
+            continue;
+        }
+
+        qDebug()<<++count;
+        std::string data = packet_queue.front();
+        SI->DataBuf.buf = const_cast<char*>(data.c_str());
+        SI->BytesToSend = data.size();
+
+        if(!conn.WSASendTo(SI, WorkerRoutine_UDPSend)) {
+            continue;
+        }
+
+        packet_queue.pop();
+        Sleep(10);
+
+        qDebug() << "UDPMulticaset() finished sending to group.";
+
+    }*/
+    /*
+    sockaddr_in InternetAddr;
+    InternetAddr.sin_family = AF_INET;
+    InternetAddr.sin_addr.s_addr = inet_addr("234.57.7.8");
+    InternetAddr.sin_port = htons(7000);
+    while(true){
+        //Sleep(2000);
+
+
+        if(packet_queue.empty()){
+            count = 0;
+            continue;
+        }
+
+        qDebug()<<++count;
+
+        DWORD bytes_to_send = BUFFERSIZE;
+
+        sendto(socket_udp, packet_queue.front().c_str(), bytes_to_send, 0, (struct sockaddr *)&InternetAddr, sizeof(InternetAddr));
+
+        packet_queue.pop();
+        Sleep(1);
+
+        qDebug() << "UDPMulticaset() finished sending to group.";
+
+    }*/
+}
+
+void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
+   LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+{
+    LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
+
+    if(!conn.checkError(SI, Error))
+        return;
+
+   SI->BytesSEND += BytesTransferred;
+
+   if (SI->BytesSEND < SI->BytesToSend)
+   {
+       conn.WSASendTo(SI, WorkerRoutine_UDPSend);
+   }
+
 }
 
 void Server::addStreamData(QByteArray data){
+    qDebug() << "addStreamData";
+
     streamQueue.push_back(data);
 }
-
-
-
-
-
-
-
-
-

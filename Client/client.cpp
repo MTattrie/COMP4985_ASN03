@@ -8,6 +8,11 @@
 #include "connection.h"
 #include "packet.h"
 
+#include <ws2tcpip.h>
+
+#include <iostream>
+#include <fstream>
+
 
 Client::Client(QObject *parent) : QObject(parent)
 {
@@ -18,45 +23,73 @@ Client::Client(QObject *parent) : QObject(parent)
 Connection conn;
 SOCKET socket_tcp;
 SOCKET socket_udp;
+sockaddr_in server;
 
 
 
-void Client::startThreads(){
+void Client::start(){
     std::thread(&Client::startTCP, this).detach();
     std::thread(&Client::startUDP, this).detach();
 }
 
+
 void Client::startTCP(){
     if(!conn.WSAStartup())
         return;
-    runTCP();
+    connectTCP();
     WSACleanup();
     closesocket (socket_tcp);
     qDebug() << "Client::startTCP() Socket " << socket_tcp << " closed";
 }
 
+
 void Client::startUDP(){
     if(!conn.WSAStartup())
         return;
-    runUDP();
+    connectUDP();
     WSACleanup();
     closesocket (socket_udp);
     qDebug() << "Client::startUDP() Socket " << socket_udp << " closed";
 }
 
 
-void Client::runTCP(){
-    WSAEVENT readEvent;
-    char rbuf[DATA_BUFSIZE];
+
+
+
+void Client::connectTCP(){
     string host = "localhost";
     int port =	7000;
 
     if(!conn.WSASocketTCP(socket_tcp))
         return;
-    if(!conn.setsockopt(socket_tcp, SOL_SOCKET, SO_REUSEADDR))
+    if(!conn.setoptSO_REUSEADDR(socket_tcp))
         return;
     if(!conn.connect(socket_tcp, host, port))
         return;
+    runTCP();
+}
+
+
+void Client::connectUDP(){
+    string host = "localhost";
+    int port =	7000;
+
+    if(!conn.WSASocketUDP(socket_udp))
+        return;
+    if(!conn.setoptSO_REUSEADDR(socket_udp))
+        return;
+    if(!conn.bind(socket_udp, server, port))
+        return;
+    if(!conn.setoptIP_ADD_MEMBERSHIP(socket_udp))
+        return;
+    runUDP();
+}
+
+
+void Client::runTCP(){
+    char rbuf[BUFFERSIZE];
+    WSAEVENT readEvent;
+
     if(!conn.WSACreateEvent(readEvent))
         return;
     if(!conn.WSAEventSelect(socket_tcp, readEvent, FD_READ))
@@ -77,53 +110,44 @@ void Client::runTCP(){
 
 
 void Client::runUDP(){
-    int port =	7000;
-    char rbuf[DATA_BUFSIZE];
+    char rbuf[BUFFERSIZE];
+    WSAEVENT readEvent;
 
-    if(!conn.WSASocketUDP(socket_udp))
+    if(!conn.WSACreateEvent(readEvent))
         return;
-
-    if(!conn.setsockopt(socket_udp, SOL_SOCKET, SO_REUSEADDR))
+    if(!conn.WSAEventSelect(socket_udp, readEvent, FD_READ))
         return;
-
-    if(!conn.bind(socket_udp, port))
-        return;
-    qDebug() << "runUDP";
-
     while (true) {
+        if(!conn.WSAWaitForMultipleEvents(readEvent))
+            return;
+        WSAResetEvent(readEvent);
 
-        if(!conn.recv(socket_udp, rbuf))
+        int n = conn.recv(socket_udp, rbuf);
+        if(n<=0)
             continue;
 
-        qDebug() << "UDP stream: " << rbuf;
+        if(rbuf[0] == '0'){
+            emit receivedHeader(&rbuf[1], n-1);
+        }else if(rbuf[0] == '1'){
+            emit receivedChunkData(&rbuf[1], n-1);
+        }
     }
 }
 
 
 void Client::requestSong(QString song){
-    char sbuf[DATA_BUFSIZE];
+    char buffer[BUFFERSIZE];
 
-    QString header = "HEADER REQUEST SONG: ";
-    header.append(song);
-    header.append(" HEADER");
+    QString packet;
+    packet.append(DOWNLOAD);
+    packet.append(song);
 
-//    CommandPacket packet;
-//    packet.command = Command::SEND;
-//    packet.song = song.toStdString();
+    memset((char *)buffer, 0, BUFFERSIZE);
+    memcpy(buffer, packet.toStdString().c_str(), BUFFERSIZE);
 
-    memset((char *)sbuf, 0, DATA_BUFSIZE);
-    memcpy(sbuf, header.toStdString().c_str(), DATA_BUFSIZE);
-
-    if(!conn.send(socket_tcp, sbuf))
+    if(!conn.send(socket_tcp, buffer))
         return;
 }
-
-
-
-
-
-
-
 
 
 

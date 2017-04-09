@@ -5,24 +5,35 @@
 #include <QObject>
 #include <QQueue>
 
+
+
+struct Client
+{
+      SOCKET_INFORMATION SocketInfo;
+      SOCKADDR_IN        Connection;
+};
+
+
+
 class Server : public QObject
 {
     Q_OBJECT
 public:
     explicit Server(QObject *parent = 0);
 
-    bool setPort(QString _port);
+    void start();
     void startTCP();
-    void startUDP();
+    void connectTCP();
     void runTCP();
-    void connect();
-
     void addStreamData(QByteArray data);
-
     void acceptThread(WSAEVENT event);
     void readThread();
 
-    void UDPMulticast();
+    bool setPort(QString _port);
+    void startUDP();
+    void connectUDP();
+    void runUDP();
+
 
     bool multicast(char *message, const int len);
 
@@ -35,6 +46,8 @@ public:
     static void CALLBACK WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
             LPWSAOVERLAPPED Overlapped, DWORD InFlags);
 
+    static void CALLBACK WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
 
 signals:
     void update_log(QString packet);

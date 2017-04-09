@@ -11,11 +11,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-    Client c;
 
-    QObject::connect(&w, SIGNAL( requestSong(QString) ), &c, SLOT( requestSong(QString) ));
-
-    c.startThreads();
 
     return a.exec();
 }

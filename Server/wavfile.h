@@ -54,6 +54,7 @@ public:
     const QAudioFormat &fileFormat() const;
     qint64 headerLength() const;
     bool setFileForamt(const QAudioFormat& format);
+    bool readHeader(char *data, qint64 len);
 
 private:
     bool readHeader();

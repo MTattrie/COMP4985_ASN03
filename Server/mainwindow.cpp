@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     findAvailableSongs();
     initAudioOuput();
+
+    std::thread(&Server::start, &server).detach();
 }
 
 MainWindow::~MainWindow()
@@ -69,6 +71,7 @@ void MainWindow::playNextSong(){
         return;
     audio->start(audioPlayer);
     audioPlayer->start();
+    audio->setVolume(0);
     songFinished = false;
 }
 
@@ -188,6 +191,8 @@ void MainWindow::handleChunkStream(qint64 len, qint64 pos){
 
 void MainWindow::sendHeader(){
     server.addStreamData(audioPlayer->readHeaderData().prepend("0"));
+    qDebug()<< "sendHeader" << audioPlayer->readHeaderData();
+
     //server.addStreamData("HEADER");
 
 }
