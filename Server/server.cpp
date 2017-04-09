@@ -111,6 +111,8 @@ void Server::readThread(){
 
     client_addresses.push_back(SI);
 
+    SI->thisObj = this;
+    this->receivedCommand(1);
     while(true){
         if(!conn.WSAWaitForMultipleEvents(readEvent))
             break;
@@ -153,31 +155,27 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
 
         int command = SI->Buffer[0];
 
-        string filename(SI->Buffer + 1);
-        string filelocation = "../assets/musics/" + filename;
-        std::ifstream fin(filelocation, std::ios::in | std::ifstream::binary);
-        std::vector<char> buffer;
-        std::ofstream outfile ("../assets/musics/test1.wav", std::ios_base::app | std::ios_base::out | std::ios::binary);
-
-
-        std::copy(std::istream_iterator<char>(fin), std::istream_iterator<char>(), std::back_inserter(buffer));
-
-        for(size_t i = 0; i < buffer.size(); i += BUFFERSIZE) {
-            auto last = min(buffer.size(), i + BUFFERSIZE);
-            packet_queue.push(string(buffer.begin() + i, buffer.begin() + last));
-        }
-        outfile.close();
-
         //parse command
         SI->DataBuf.buf = SI->Buffer;
         SI->DataBuf.len = BUFFERSIZE;
 
+        qDebug() << "Server::WorkerRoutine_RecvCommand receved command :  " <<command;
+
         switch(command){
-        case 1://send list using tcp
-            conn.WSASend(SI, WorkerRoutine_SendList);
+        case 0: // upload song
             return;
-        case 3:
-            //recv song
+        case 1: //download song
+            //conn.WSASend(SI, WorkerRoutine_SendList);
+            return;
+        case 2: //add list
+            return;
+        case 3: //play or pause
+        case 4: // fastforward
+        case 5: // rewind
+        case 6: // skip track
+            emit ((Server *)(SI->thisObj))->receivedCommand(command);
+            return;
+        case 7: //stream
             return;
         }
     }

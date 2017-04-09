@@ -51,6 +51,7 @@ public:
 
 signals:
     void update_log(QString packet);
+    void receivedCommand(int command);
 
 public slots:
 

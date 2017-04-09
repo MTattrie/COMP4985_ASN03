@@ -45,6 +45,8 @@ void MainWindow::initAudioOuput(){
     audioPlayer = new AudioPlayer();
     connect(audioPlayer, SIGNAL(songFinished()), this, SLOT(handleSongFinished()));
     connect(audioPlayer, SIGNAL(streamChunkAudio(qint64,qint64)), this, SLOT(handleChunkStream(qint64,qint64)));
+    connect(&server, SIGNAL(receivedCommand(int)), this, SLOT(handleReceivedCommand(int)));
+
 }
 
 bool MainWindow::setAudioHeader(QAudioFormat format){
@@ -128,6 +130,8 @@ void MainWindow::on_ffBTN_clicked()
     audio = new QAudioOutput(format, this);
     connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
     audio->start(audioPlayer);
+    audio->setVolume(0);
+
 }
 
 void MainWindow::on_playBTN_clicked()
@@ -208,4 +212,22 @@ void MainWindow::on_serverStartBTN_clicked()
     if(server.setPort(port)){
     }
 
+}
+
+void MainWindow::handleReceivedCommand(int command)
+{
+    switch(command){
+    case 3: //play or pause
+        on_playBTN_clicked();
+        return;
+    case 4: // fastforward
+        //on_ffBTN_clicked(); //Need to broadcast to all clients
+        return;
+    case 5: // rewind
+        on_rewindBTN_clicked();
+        return;
+    case 6: // skip track
+        on_skipBTN_clicked();
+        return;
+    }
 }

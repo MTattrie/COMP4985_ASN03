@@ -34,7 +34,23 @@ void MainWindow::on_button_addSong_clicked()
 
 void MainWindow::on_button_play_clicked()
 {
-    playNextSong();
+    client.reqeustCommand(PLAYPAUSE);
+}
+
+void MainWindow::on_button_skip_clicked()
+{
+    client.reqeustCommand(SKIPTRACK);
+}
+
+
+void MainWindow::on_button_FastForward_clicked()
+{
+    client.reqeustCommand(FASTFORWORD);
+}
+
+void MainWindow::on_button_rewind_clicked()
+{
+    client.reqeustCommand(REWIND);
 }
 
 void MainWindow::initAudioOuput(){
@@ -54,24 +70,8 @@ bool MainWindow::setAudioHeader(QAudioFormat format){
     return true;
 }
 
-void MainWindow::playNextSong(){
 
-}
 
-void MainWindow::on_button_skip_clicked()
-{
-
-}
-
-void MainWindow::on_pushButton_5_clicked()
-{
-
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-
-}
 
 void MainWindow::on_button_download_clicked()
 {
@@ -108,3 +108,4 @@ void MainWindow::handleReceivedChunk(char *data, qint64 len){
     }
 
 }
+

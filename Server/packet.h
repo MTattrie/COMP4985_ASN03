@@ -16,7 +16,7 @@ using std::string;
 #define SKIPTRACK   6
 #define STREAM      7
 
-#define BUFFERSIZE 40000
+#define BUFFERSIZE 20000
 
 
 #endif

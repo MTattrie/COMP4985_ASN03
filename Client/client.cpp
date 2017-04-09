@@ -149,6 +149,18 @@ void Client::requestSong(QString song){
         return;
 }
 
+void Client::reqeustCommand(int command){
+    char buffer[BUFFERSIZE];
+
+    QString packet(command);
+
+    memset((char *)buffer, 0, BUFFERSIZE);
+    memcpy(buffer, packet.toStdString().c_str(), BUFFERSIZE);
+
+    if(!conn.send(socket_tcp, buffer))
+        return;
+}
+
 
 
 

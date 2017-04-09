@@ -11,6 +11,8 @@
 #include "wavfile.h"
 #include "audioplayer.h"
 #include "client.h"
+#include "packet.h"
+
 
 namespace Ui {
 class MainWindow;
@@ -37,15 +39,15 @@ private slots:
 
     void on_button_skip_clicked();
 
-    void on_pushButton_5_clicked();
-
-    void on_pushButton_3_clicked();
-
     void on_button_download_clicked();
 
     void handleReceivedHeader(char *data, qint64 len);
 
     void handleReceivedChunk(char *data, qint64 len);
+
+    void on_button_FastForward_clicked();
+
+    void on_button_rewind_clicked();
 
 private:
     Ui::MainWindow *ui;

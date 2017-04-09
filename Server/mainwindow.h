@@ -46,6 +46,8 @@ private slots:
 
     void on_serverStartBTN_clicked();
 
+    void handleReceivedCommand(int command);
+
 private:
     Ui::MainWindow *ui;
 
