@@ -14,19 +14,18 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = 0);
 
-    void startThreads();
+    void start();
+
     void startTCP();
-    void startUDP();
+    void connectTCP();
     void runTCP();
+
+    void startUDP();
+    void connectUDP();
     void runUDP();
-
-
-    void workerThreadTCP(WSAEVENT event);
-
-    static void CALLBACK WorkerRoutineTCP(DWORD Error, DWORD BytesTransferred,
-            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
-
 signals:
+    void receivedHeader(char *data, qint64 len);
+    void receivedChunkData(char *data, qint64 len);
 
 public slots:
     void requestSong(QString song);
