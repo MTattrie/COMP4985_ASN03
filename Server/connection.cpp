@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <QDebug>
 #include <string>
+#include <ws2tcpip.h>
+
+using std::string;
 
 
 bool Connection::WSAStartup(){
@@ -17,6 +20,11 @@ bool Connection::WSAStartup(){
     }
     return true;
 }
+
+
+/* ================================================================================== *
+ *                                   SOCKETS
+ * ================================================================================== */
 
 
 bool Connection::WSASocketTCP(SOCKET &s){
@@ -42,7 +50,7 @@ bool Connection::WSASocketUDP(SOCKET &s){
 
 
 bool Connection::bind(SOCKET &s, int port){
-    SOCKADDR_IN InternetAddr;
+    sockaddr_in InternetAddr;
     InternetAddr.sin_family = AF_INET;
     InternetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     InternetAddr.sin_port = htons(port);
@@ -67,6 +75,77 @@ bool Connection::listen(SOCKET &s){
     qDebug() << "Connection::listen() listen to socket " << s << " with backlog of " << backlog;
     return true;
 }
+
+
+bool Connection::setoptSO_REUSEADDR(SOCKET &s){
+    int opt = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt)) < 0)
+    {
+       qDebug() << "WSASocket() failed with error " << WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::setoptIP_MULTICAST_TTL(SOCKET &s){
+    u_long time = 1;
+    if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&time, sizeof(time)) == SOCKET_ERROR)
+    {
+        qDebug() << "setsockopt() failed with error on time to live" << WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::setoptIP_MULTICAST_LOOP(SOCKET &s){
+    BOOL LoopBackFlag = false;
+    if(::setsockopt(s, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&LoopBackFlag, sizeof(LoopBackFlag)) == SOCKET_ERROR)
+    {
+        qDebug() << "Setsocketopt() failed with error on loop back" << WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s){
+    struct ip_mreq   MulticastAddress;
+    MulticastAddress.imr_multiaddr.s_addr = inet_addr("234.57.7.8");
+    MulticastAddress.imr_interface.s_addr = INADDR_ANY;
+    if(::setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&MulticastAddress, sizeof(MulticastAddress)) == SOCKET_ERROR)
+    {
+        qDebug() << "setsockopt() failed with error on multicast address " <<  WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s){
+    if ((SocketInfo = (LPSOCKET_INFORMATION) GlobalAlloc(GPTR, sizeof(SOCKET_INFORMATION))) == NULL)
+    {
+        qDebug() << "Connection::createSocketInfo(): GlobalAlloc() failed with error " << GetLastError();
+        return false;
+    }
+    SocketInfo->socket_tcp = s;
+    ZeroMemory(&(SocketInfo->Overlapped), sizeof(WSAOVERLAPPED));
+    SocketInfo->BytesSEND = 0;
+    SocketInfo->BytesRECV = 0;
+    SocketInfo->DataBuf.len = BUFFERSIZE;
+    SocketInfo->DataBuf.buf = SocketInfo->Buffer;
+
+    memset(SocketInfo->Buffer, 0, sizeof(SocketInfo->Buffer));
+
+    qDebug() << "Connection::createSocketInfo() Socket " << s << " connected";
+    return true;
+}
+
+
+/* ================================================================================== *
+ *                                   EVENTS
+ * ================================================================================== */
 
 
 bool Connection::WSACreateEvent(WSAEVENT &event){
@@ -118,24 +197,10 @@ bool Connection::WSAWaitForMultipleEvents(WSAEVENT &event){
 }
 
 
-bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s){
-    if ((SocketInfo = (LPSOCKET_INFORMATION) GlobalAlloc(GPTR, sizeof(SOCKET_INFORMATION))) == NULL)
-    {
-        qDebug() << "Connection::createSocketInfo(): GlobalAlloc() failed with error " << GetLastError();
-        return false;
-    }
-    SocketInfo->socket_tcp = s;
-    ZeroMemory(&(SocketInfo->Overlapped), sizeof(WSAOVERLAPPED));
-    SocketInfo->BytesSEND = 0;
-    SocketInfo->BytesRECV = 0;
-    SocketInfo->DataBuf.len = DATA_BUFSIZE;
-    SocketInfo->DataBuf.buf = SocketInfo->Buffer;
 
-    memset(SocketInfo->Buffer, 0, sizeof(SocketInfo->Buffer));
 
-    qDebug() << "Connection::createSocketInfo() Socket " << s << " connected";
-    return true;
-}
+
+
 
 
 bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
@@ -156,16 +221,24 @@ bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
 }
 
 
-bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI){
+bool Connection::WSASendTo(SOCKET& socket_udp, WSABUF& buffer){
     DWORD SendBytes = 0;
-    int	client_len = sizeof(SI->client_address);
-    if (::WSASendTo(SI->socket_tcp, &(SI->DataBuf), 1, &SendBytes, 0,
-            (struct sockaddr *)&(SI->client_address), client_len,
+
+    sockaddr_in InternetAddr;
+    InternetAddr.sin_family = AF_INET;
+    InternetAddr.sin_addr.s_addr = inet_addr("234.57.7.8");
+    InternetAddr.sin_port = htons(7000);
+
+    int	client_len = sizeof(InternetAddr);
+
+    if (::WSASendTo(socket_udp, &buffer, 1, &SendBytes, 0,
+            (struct sockaddr *)&(InternetAddr), client_len,
             0, NULL) == SOCKET_ERROR)
     {
-        if (WSAGetLastError() != WSA_IO_PENDING)
+        int error = WSAGetLastError();
+        if (error != WSA_IO_PENDING)
         {
-            qDebug() << "Connection::WSASendTo() failed with error" << WSAGetLastError();
+            qDebug() << "Connection::WSASendTo() failed with error" << error;
             return false;
         }
         qDebug() << "Connection::WSASendTo() WSA_IO_PENDING";
@@ -193,6 +266,8 @@ bool Connection::WSARecv(LPSOCKET_INFORMATION &SI,
         }
         qDebug() << "Connection::WSARecv() WSA_IO_PENDING";
     }
+    qDebug() << "Connection::WSARecv() RecvBytes : " << RecvBytes;
+
     return true;
 }
 
@@ -219,9 +294,17 @@ bool Connection::WSARecvFrom(LPSOCKET_INFORMATION SI,
         }
         qDebug() << "Connection::WSARecvFrom() WSA_IO_PENDING";
     }
+    SI->client_address.sin_port = htons(8000);
     qDebug() << "Connection::WSARecvFrom() Received " << RecvBytes << "bytes.";
     return true;
 }
+
+
+
+
+
+
+
 
 
 
@@ -249,14 +332,8 @@ bool Connection::checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred)
 }
 
 
-bool Connection::setsockopt(SOCKET &s, int level, int option, const char* value){
-    int nRet = ::setsockopt(s, level, option, (char *)&value, sizeof(value));
-    if (nRet == SOCKET_ERROR) {
-        qDebug() << "Connection::setsockopt() Failed with error " << WSAGetLastError();
-        return false;
-    }
-    return true;
-}
+
+
 
 
 

@@ -1,6 +1,8 @@
 #include "connection.h"
+#include "packet.h"
 #include <QDebug>
 #include <string>
+#include <ws2tcpip.h>
 
 using std::string;
 
@@ -52,24 +54,13 @@ bool Connection::WSASocketUDP(SOCKET &s){
 }
 
 
-bool Connection::setsockopt(SOCKET &s, int level, int option){
-    int flags = 1;
-    int nRet = ::setsockopt(s, level, option, (char*)&flags, sizeof(flags));
-    if (nRet == SOCKET_ERROR) {
-        qDebug() << "Connection::setsockopt() Failed with error " << WSAGetLastError();
-        return false;
-    }
-    return true;
-}
+bool Connection::bind(SOCKET &s, sockaddr_in &server, int port){
+    memset((char *)&server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = htonl(INADDR_ANY);
+    server.sin_port = htons(port);
 
-
-bool Connection::bind(SOCKET &s, int port){
-    SOCKADDR_IN InternetAddr;
-    InternetAddr.sin_family = AF_INET;
-    InternetAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    InternetAddr.sin_port = htons(port);
-
-    if (::bind(s, (PSOCKADDR) &InternetAddr, sizeof(InternetAddr)) == SOCKET_ERROR)
+    if (::bind(s, (struct sockaddr *)&server, sizeof(server)) == SOCKET_ERROR)
     {
        qDebug() << "Connection::bind() failed with error " << WSAGetLastError();
        return false;
@@ -101,6 +92,29 @@ bool Connection::connect(SOCKET &s, string host, int port){
 }
 
 
+bool Connection::setoptSO_REUSEADDR(SOCKET &s){
+    int opt = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt)) < 0)
+    {
+       qDebug() << "WSASocket() failed with error " << WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
+
+bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s){
+    struct ip_mreq   MulticastAddress;
+    MulticastAddress.imr_multiaddr.s_addr = inet_addr("234.57.7.8");
+    MulticastAddress.imr_interface.s_addr = INADDR_ANY;
+    if(::setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&MulticastAddress, sizeof(MulticastAddress)) == SOCKET_ERROR)
+    {
+        qDebug() << "setsockopt() failed with error on multicast address " <<  WSAGetLastError();
+        return false;
+    }
+    return true;
+}
+
 /* ================================================================================== *
  *                                   SEND/RECV
  * ================================================================================== */
@@ -108,10 +122,33 @@ bool Connection::connect(SOCKET &s, string host, int port){
 
 
 bool Connection::send(SOCKET &s, char buffer[]){
-    DWORD bytes_to_send = DATA_BUFSIZE;
+    DWORD bytes_to_send = BUFFERSIZE;
     char *bp = buffer;
     int n;
-    while ((n = ::send(s, bp, bytes_to_send, 0)) < DATA_BUFSIZE)
+    while ((n = ::send(s, bp, bytes_to_send, 0)) < BUFFERSIZE)
+    {
+        if (WSAGetLastError() != WSA_IO_PENDING)
+        {
+            qDebug() << "Connection::WSASend() failed with error" << WSAGetLastError();
+            return false;
+        }
+        bp += n;
+        bytes_to_send -= n;
+        if (n == 0)
+            break;
+    }
+    qDebug() << "Client::send() buffer contents: " << buffer;
+    qDebug() << "Client::send() buffer BUFFERSIZE: " << BUFFERSIZE;
+
+    return true;
+}
+
+
+bool Connection::sendto(SOCKET &s, sockaddr_in &server, char buffer[]){
+    DWORD bytes_to_send = BUFFERSIZE;
+    char *bp = buffer;
+    int n;
+    while ((n = ::sendto(s, bp, bytes_to_send, 0, (struct sockaddr *)&server, sizeof(server))) < BUFFERSIZE)
     {
         if (WSAGetLastError() != WSA_IO_PENDING)
         {
@@ -128,14 +165,37 @@ bool Connection::send(SOCKET &s, char buffer[]){
 }
 
 bool Connection::recv(SOCKET &s, char buffer[]){
-    DWORD bytes_to_read = DATA_BUFSIZE;
+    DWORD bytes_to_read = BUFFERSIZE;
     char * bp = buffer;
     int n;
-    while ((n = ::recv(s, bp, bytes_to_read, 0)) < DATA_BUFSIZE)
+    while ((n = ::recv(s, bp, bytes_to_read, 0)) < BUFFERSIZE)
     {
-        if (WSAGetLastError() != WSA_IO_PENDING)
+        int error = WSAGetLastError();
+        if (error != WSA_IO_PENDING && error != 0)
         {
-            qDebug() << "Connection::WSARecv() failed with error" << WSAGetLastError();
+            qDebug() << "Connection::WSARecv() failed with error" << error;
+            return false;
+        }
+        bp += n;
+        bytes_to_read -= n;
+        if (n == 0)
+            break;
+    }
+    qDebug() << "Client::recv() buffer contents: " << buffer;
+    return true;
+}
+
+bool Connection::recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]){
+    DWORD bytes_to_read = BUFFERSIZE;
+    char * bp = buffer;
+    int n;
+    int serverlen = sizeof(server);
+    while ((n = ::recvfrom(s, bp, bytes_to_read, 0, (struct sockaddr *)&server, &serverlen)) < BUFFERSIZE)
+    {
+        int error = WSAGetLastError();
+        if (error != WSA_IO_PENDING)
+        {
+            qDebug() << "Connection::WSARecv() failed with error" << error;
             return false;
         }
         bp += n;
