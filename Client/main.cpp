@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     QObject::connect(&w, SIGNAL( requestSong(QString) ), &c, SLOT( requestSong(QString) ));
 
-    c.startThreads();
+    c.start();
 
     return a.exec();
 }

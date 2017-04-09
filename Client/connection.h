@@ -32,17 +32,23 @@ public:
     Connection();
 
     bool WSAStartup();
+
     bool WSASocketTCP(SOCKET &s);
     bool WSASocketUDP(SOCKET &s);
-    bool setsockopt(SOCKET &s, int level, int option);
-    bool bind(SOCKET &s, int port);
+    bool bind(SOCKET &s, sockaddr_in &server, int port);
     bool connect(SOCKET &s, string host, int port);
+    bool setoptSO_REUSEADDR(SOCKET &s);
+    bool setoptIP_ADD_MEMBERSHIP(SOCKET &s);
+
     bool WSAEventSelect(SOCKET &s, WSAEVENT &event, long networkEvents);
     bool WSACreateEvent(WSAEVENT &event);
     bool WSAWaitForMultipleEvents(WSAEVENT &event);
 
     bool send(SOCKET &sd, char buffer[]);
     bool recv(SOCKET &sd, char buffer[]);
+
+    bool sendto(SOCKET &s, sockaddr_in &server, char buffer[]);
+    bool recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
 
 
 
