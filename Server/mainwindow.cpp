@@ -46,6 +46,7 @@ void MainWindow::initAudioOuput(){
     connect(audioPlayer, SIGNAL(songFinished()), this, SLOT(handleSongFinished()));
     connect(audioPlayer, SIGNAL(streamChunkAudio(qint64,qint64)), this, SLOT(handleChunkStream(qint64,qint64)));
     connect(&server, SIGNAL(receivedCommand(int)), this, SLOT(handleReceivedCommand(int)));
+    connect(&server, SIGNAL(newClientConnected(int)), this, SLOT(handleNewClient(int)));
 
 }
 
@@ -189,14 +190,12 @@ void MainWindow::handleStateChanged(QAudio::State newState)
 }
 
 void MainWindow::handleChunkStream(qint64 len, qint64 pos){
-    server.addStreamData(audioPlayer->readChunkData(len, pos).prepend("1"));
+    server.addStreamData(audioPlayer->readChunkData(len, pos).prepend('7'));
     //server.addStreamData("DATA");
 }
 
 void MainWindow::sendHeader(){
-    server.addStreamData(audioPlayer->readHeaderData().prepend("0"));
-    qDebug()<< "sendHeader" << audioPlayer->readHeaderData();
-
+    server.addStreamData(audioPlayer->readHeaderData().prepend('8'));
     //server.addStreamData("HEADER");
 
 }
@@ -230,4 +229,26 @@ void MainWindow::handleReceivedCommand(int command)
         on_skipBTN_clicked();
         return;
     }
+}
+
+void MainWindow::handleNewClient(int client_num)
+{
+    qDebug()<< "handleNewClient" ;
+    if(audioPlayer->isPlaying()){ // SendHeader
+        server.sendToClient(client_num, HEADER, audioPlayer->readHeaderData());
+    }
+    //Send list of songs.
+
+    QString availableSongs;
+    foreach(QString item, available_song_model->stringList()){
+        availableSongs += item + "/";
+    }
+    QString playList;
+    foreach(QString item, playlist_model->stringList()){
+        playList += item + "/";
+    }
+
+    server.sendToClient(client_num, AVAILSONG, QByteArray(availableSongs.toStdString().c_str()));
+    server.sendToClient(client_num, PLAYLIST, QByteArray(playList.toStdString().c_str()));
+
 }

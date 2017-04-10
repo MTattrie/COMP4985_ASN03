@@ -48,6 +48,8 @@ private slots:
 
     void handleReceivedCommand(int command);
 
+    void handleNewClient(int client_num);
+
 private:
     Ui::MainWindow *ui;
 

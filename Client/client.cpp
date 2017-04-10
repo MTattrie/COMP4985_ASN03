@@ -95,15 +95,35 @@ void Client::runTCP(){
     if(!conn.WSAEventSelect(socket_tcp, readEvent, FD_READ))
         return;
 
+    qDebug()<<"runTCP ";
+
     while(true) {
         if(!conn.WSAWaitForMultipleEvents(readEvent))
             return;
         WSAResetEvent(readEvent);
 
-        if(!conn.recv(socket_tcp, rbuf))
+        int n = conn.recv(socket_tcp, rbuf);
+        if(n<=0)
             continue;
 
-        //Handle received songs / lists here.
+        int command = rbuf[0];
+        switch(command){
+            case HEADER:
+                char header[44];
+                memcpy(header, &rbuf[1], 44);
+                emit receivedHeader(header, 44);
+                break;
+            case AVAILSONG:
+                char availSongs[BUFFERSIZE - 1];
+                memcpy(availSongs, &rbuf[1], n-1);
+                emit receivedAvailSongs(availSongs);
+                break;
+            case PLAYLIST:
+                char playlist[BUFFERSIZE - 1];
+                memcpy(playlist, &rbuf[1], n-1);
+                emit receivedPlaylist(playlist);
+                break;
+        }
     }
 }
 
@@ -125,11 +145,15 @@ void Client::runUDP(){
         int n = conn.recv(socket_udp, rbuf);
         if(n<=0)
             continue;
+        int command = rbuf[0] - '0';
 
-        if(rbuf[0] == '0'){
-            emit receivedHeader(&rbuf[1], n-1);
-        }else if(rbuf[0] == '1'){
-            emit receivedChunkData(&rbuf[1], n-1);
+        switch(command){
+            case HEADER:
+                emit receivedHeader(&rbuf[1], n-1);
+                break;
+            case STREAM:
+                emit receivedChunkData(&rbuf[1], n-1);
+                break;
         }
     }
 }

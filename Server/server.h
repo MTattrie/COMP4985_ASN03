@@ -48,10 +48,13 @@ public:
 
     static void CALLBACK WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
             LPWSAOVERLAPPED Overlapped, DWORD InFlags);
-
+    static void CALLBACK WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
+            LPWSAOVERLAPPED Overlapped, DWORD InFlags);
+    void sendToClient(int client_num, int command, QByteArray data);
 signals:
     void update_log(QString packet);
     void receivedCommand(int command);
+    void newClientConnected(int client_num);
 
 public slots:
 

@@ -41,14 +41,17 @@ private slots:
 
     void on_button_download_clicked();
 
-    void handleReceivedHeader(char *data, qint64 len);
-
-    void handleReceivedChunk(char *data, qint64 len);
-
     void on_button_FastForward_clicked();
 
     void on_button_rewind_clicked();
 
+    void handleReceivedHeader(char *data, qint64 len);
+
+    void handleReceivedChunk(char *data, qint64 len);
+
+    void handleReceivedAvailSongs(char *);
+
+    void handleReceivedPlaylist(char *);
 private:
     Ui::MainWindow *ui;
     QStringListModel *available_song_model;
