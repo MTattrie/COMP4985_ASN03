@@ -25,8 +25,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initAudioOuput();
 
+    m_pPalette	= new QPalette();
+    m_pPixmap = new QPixmap("../assets/ui/background.jpg");
 
+    QPalette* palette = new QPalette();
+    palette->setBrush(QPalette::Background,*(new QBrush(*(m_pPixmap))));
+    setPalette(*palette);
+
+    connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
+
+//    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
 }
+
+
 void MainWindow::findAvailableSongs(){
 
 }
@@ -79,17 +90,12 @@ bool MainWindow::setAudioHeader(QAudioFormat format){
     return true;
 }
 
-
-
-
 void MainWindow::on_button_download_clicked()
 {
     QModelIndex index = ui->listView_availSongs->currentIndex();
     if(index.row() < 0)
         return;
-
     QString itemText = index.data(Qt::DisplayRole).toString();
-
     emit requestSong(itemText);
 }
 
@@ -121,7 +127,6 @@ void MainWindow::handleReceivedChunk(char *data, qint64 len){
 
 }
 
-
 void MainWindow::handleReceivedAvailSongs(char *list){
     QStringList stringList = QString(list).split('/');
     stringList.removeLast();
@@ -131,4 +136,49 @@ void MainWindow::handleReceivedPlaylist(char *list){
     QStringList stringList = QString(list).split('/');
     stringList.removeLast();
     playlist_model->setStringList(stringList);
+}
+
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: decodeMessage
+--
+-- DATE: April 7, 2017
+--
+-- DESIGNER:
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: void MainWindow::decodeMessage(QString message)
+--                  QString message: Text data recevied from the server
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Called when received a message from the server.
+--  Reads the first character of the received message and handle the message by the code.
+----------------------------------------------------------------------------------------------------------------------*/
+void MainWindow::decodeMessage(QString message) {
+    qDebug() << "decodeMessage";
+
+    if(!message.at(0).isNumber())
+        return;
+    switch(message.at(0).digitValue()){
+    case 1: // Dong to Download
+
+        break;
+    case 2: // Update Playlist
+
+        break;
+    case 3: // Update Available Songs
+
+        break;
+    default:
+        break;
+    }
+}
+
+
+void MainWindow::setVolume(int value)
+{
+    audio->setVolume((float)value / 100);
 }

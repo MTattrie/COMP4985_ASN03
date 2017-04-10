@@ -8,6 +8,8 @@
 #include <QAudioOutput>
 #include <QBuffer>
 #include <thread>
+#include <QtGui>
+#include <QPalette>
 #include "wavfile.h"
 #include "audioplayer.h"
 #include "client.h"
@@ -27,6 +29,13 @@ public:
     ~MainWindow();
 
     void findAvailableSongs();
+    void decodeMessage(QString message);
+
+    void resizeEvent (QResizeEvent* event)
+      {
+          m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
+          setPalette(*m_pPalette);
+      };
 
 signals:
     void requestSong(QString song);
@@ -52,6 +61,9 @@ private slots:
     void handleReceivedAvailSongs(char *);
 
     void handleReceivedPlaylist(char *);
+
+    void setVolume(int value);
+
 private:
     Ui::MainWindow *ui;
     QStringListModel *available_song_model;
@@ -59,6 +71,8 @@ private:
     QAudioOutput* audio; // class member.
     AudioPlayer *audioPlayer;
     WavFile sourceFile;
+    QPixmap* m_pPixmap;
+    QPalette* m_pPalette;
 
     bool isSetHeader;
 
