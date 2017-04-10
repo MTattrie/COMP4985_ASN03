@@ -196,8 +196,8 @@ void MainWindow::handleChunkStream(qint64 len, qint64 pos){
 
 void MainWindow::sendHeader(){
     server.addStreamData(audioPlayer->readHeaderData().prepend('8'));
-    //server.addStreamData("HEADER");
-
+    QString progress = QString::number(audioPlayer->pos()) + "," +  QString::number(audioPlayer->audioBufferSize());
+    server.addStreamData(QByteArray(progress.toStdString().c_str()).prepend('9'));
 }
 
 void MainWindow::on_serverStartBTN_clicked()
@@ -236,6 +236,8 @@ void MainWindow::handleNewClient(int client_num)
     qDebug()<< "handleNewClient" ;
     if(audioPlayer->isPlaying()){ // SendHeader
         server.sendToClient(client_num, HEADER, audioPlayer->readHeaderData());
+        QString progress = QString::number(audioPlayer->pos()) + "," +  QString::number(audioPlayer->audioBufferSize());
+        server.sendToClient(client_num, PROGRESS, QByteArray(progress.toStdString().c_str()));
     }
     //Send list of songs.
 

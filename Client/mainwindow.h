@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <winsock2.h>
 #include <QMainWindow>
 #include <QDir>
 #include <QStringListModel>
@@ -13,7 +14,6 @@
 #include "wavfile.h"
 #include "audioplayer.h"
 #include "client.h"
-#include "packet.h"
 
 
 namespace Ui {
@@ -62,7 +62,12 @@ private slots:
 
     void handleReceivedPlaylist(char *);
 
+
+    void handleReceivedProgressData(char *);
+
+
     void setVolume(int value);
+    void setProgress(int value);
 
 private:
     Ui::MainWindow *ui;

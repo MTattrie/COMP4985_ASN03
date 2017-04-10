@@ -1,5 +1,8 @@
 #include "connection.h"
-#include "packet.h"
+
+#include <winsock2.h>
+#include <windows.h>
+#include <stdio.h>
 #include <QDebug>
 #include <string>
 #include <ws2tcpip.h>

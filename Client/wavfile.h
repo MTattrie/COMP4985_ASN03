@@ -53,7 +53,7 @@ public:
     bool open(const QString &fileName);
     const QAudioFormat &fileFormat() const;
     qint64 headerLength() const;
-    bool readHeader(char *data, qint64 len);
+    bool readHeader(const char *data, qint64 len);
 
 private:
     bool readHeader();

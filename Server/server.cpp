@@ -326,6 +326,9 @@ void Server::sendToClient(int client_num, int command, QByteArray data){
     LPSOCKET_INFORMATION SI = client_addresses.at(client_num);
     data.prepend(command);
 
+    qDebug()<<"SI->data : " << data.data();
+
+
     ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
     memset(SI->Buffer, 0, sizeof(SI->Buffer));
     memcpy(SI->Buffer, data.data(), data.size());

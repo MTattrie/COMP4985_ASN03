@@ -27,12 +27,15 @@ public:
     QByteArray readHeaderData();
     QByteArray readChunkData(qint64 len, qint64 pos);
     bool addChunkData(const char *data, qint64 len);
-    bool readHeader(char *data, qint64 len);
+    bool readHeader(const char *data, qint64 len);
     void resetPlayer();
     qint64 bytesAvailable() const;
+    void setProgressData(int current, int max);
 
 private:
     qint64     audio_pos;
+    qint64     progress_current;
+    qint64     progress_max;
     QByteArray audio_buffer;
     WavFile sourceFile;
 
@@ -47,6 +50,8 @@ protected:
 signals:
     void songFinished();
     void streamChunkAudio(qint64 chunk, qint64 pos);
+    void progressAudio(int value);
+
 };
 
 #endif // AUDIOPLAYER_H

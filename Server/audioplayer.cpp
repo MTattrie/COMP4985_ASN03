@@ -77,9 +77,11 @@ qint64 AudioPlayer::writeData(const char *data, qint64 len){
 qint64 AudioPlayer::bytesAvailable() const{
     return audio_buffer.size() - audio_pos;
 }
+
 qint64 AudioPlayer::pos() const{
     return audio_pos;
 }
+
 bool AudioPlayer::seek(qint64 pos){
     if(pos < 0 || pos > audio_buffer.size())
         return false;
@@ -126,4 +128,8 @@ bool AudioPlayer::isFastForwarding(bool forward){
 bool AudioPlayer::addChunkData(const char *data, qint64 len){
     audio_buffer.append(QByteArray::fromRawData(data,len));
     return true;
+}
+
+qint64 AudioPlayer::audioBufferSize() const{
+    return audio_buffer.size();
 }

@@ -109,9 +109,9 @@ void Client::runTCP(){
         int command = rbuf[0];
         switch(command){
             case HEADER:
-                char header[44];
-                memcpy(header, &rbuf[1], 44);
-                emit receivedHeader(header, 44);
+                char header[BUFFERSIZE - 1];
+                memcpy(header, &rbuf[1], n-1);
+                emit receivedHeader(header, n-1);
                 break;
             case AVAILSONG:
                 char availSongs[BUFFERSIZE - 1];
@@ -122,6 +122,11 @@ void Client::runTCP(){
                 char playlist[BUFFERSIZE - 1];
                 memcpy(playlist, &rbuf[1], n-1);
                 emit receivedPlaylist(playlist);
+                break;
+            case PROGRESS:
+                char progressData[BUFFERSIZE - 1];
+                memcpy(progressData, &rbuf[1], n-1);
+                emit receivedProgressData(progressData);
                 break;
         }
     }
@@ -153,6 +158,11 @@ void Client::runUDP(){
                 break;
             case STREAM:
                 emit receivedChunkData(&rbuf[1], n-1);
+                break;
+            case PROGRESS:
+                char progressData[BUFFERSIZE - 1];
+                memcpy(progressData, &rbuf[1], n-1);
+                emit receivedProgressData(progressData);
                 break;
         }
     }

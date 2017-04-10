@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(&client, SIGNAL( receivedChunkData(char*,qint64)), this, SLOT(handleReceivedChunk(char*,qint64)));
     QObject::connect(&client, SIGNAL( receivedAvailSongs(char*)), this, SLOT(handleReceivedAvailSongs(char*)));
     QObject::connect(&client, SIGNAL( receivedPlaylist(char*)), this, SLOT(handleReceivedPlaylist(char*)));
+    QObject::connect(&client, SIGNAL( receivedProgressData(char*)), this, SLOT(handleReceivedProgressData(char*)));
 
 
     std::thread(&Client::start, &client).detach();
@@ -34,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
 
+    ui->ProgressSlider->setValue(40);
 //    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
 }
 
@@ -77,6 +79,8 @@ void MainWindow::initAudioOuput(){
     audio = new QAudioOutput();
     audioPlayer = new AudioPlayer();
     isSetHeader = false;
+    QObject::connect(audioPlayer, SIGNAL( progressAudio(int)), this, SLOT(setProgress(int)));
+
 }
 
 bool MainWindow::setAudioHeader(QAudioFormat format){
@@ -109,6 +113,7 @@ void MainWindow::handleReceivedHeader(char *data, qint64 len)
             playlist_model->removeRow(0);
         }
         isSetHeader = true;
+        qDebug()<<"size : " << data;
     }
     else{
         isSetHeader = false;
@@ -138,6 +143,10 @@ void MainWindow::handleReceivedPlaylist(char *list){
     playlist_model->setStringList(stringList);
 }
 
+void MainWindow::handleReceivedProgressData(char *progressData){
+    QStringList stringList = QString(progressData).split(',');
+    audioPlayer->setProgressData(stringList.at(0).toInt(), stringList.at(1).toInt());
+}
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: decodeMessage
@@ -158,7 +167,8 @@ void MainWindow::handleReceivedPlaylist(char *list){
 --  Reads the first character of the received message and handle the message by the code.
 ----------------------------------------------------------------------------------------------------------------------*/
 void MainWindow::decodeMessage(QString message) {
-    qDebug() << "decodeMessage";
+    qDebug() << "decodeMessage : " << message;
+
 
     if(!message.at(0).isNumber())
         return;
@@ -181,4 +191,9 @@ void MainWindow::decodeMessage(QString message) {
 void MainWindow::setVolume(int value)
 {
     audio->setVolume((float)value / 100);
+}
+
+void MainWindow::setProgress(int value){
+    qDebug()<<"value : " << value;
+    ui->ProgressSlider->setValue(value);
 }

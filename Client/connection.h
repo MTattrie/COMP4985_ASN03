@@ -1,13 +1,12 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
+#include "packet.h"
 
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
 #include <string>
 
-#include <iostream>
-#include <fstream>
 using std::string;
 
 #define SERVER_TCP_PORT 7000

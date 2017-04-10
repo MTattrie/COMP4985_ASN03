@@ -16,7 +16,7 @@ using std::string;
 #define SKIPTRACK   6
 #define STREAM      7
 #define HEADER      8
-
+#define PROGRESS    9
 #define AVAILSONG     10
 #define PLAYLIST      11
 
