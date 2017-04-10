@@ -167,25 +167,17 @@ bool Connection::sendto(SOCKET &s, sockaddr_in &server, char buffer[]){
     return true;
 }
 
-int Connection::recv(SOCKET &s, char buffer[]){
+bool Connection::recv(SOCKET &s, char buffer[]){
     DWORD bytes_to_read = BUFFERSIZE;
     char * bp = buffer;
     int n;
-    n = ::recv(s, bp, bytes_to_read, 0);
-
-    return n;
-}
-
-bool Connection::recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]){
-    DWORD bytes_to_read = BUFFERSIZE;
-    char * bp = buffer;
-    int n;
-    int serverlen = sizeof(server);
-    while ((n = ::recvfrom(s, bp, bytes_to_read, 0, (struct sockaddr *)&server, &serverlen)) < BUFFERSIZE)
+    while ((n = ::recv(s, bp, bytes_to_read, 0)) < BUFFERSIZE)
     {
         int error = WSAGetLastError();
-        if (error != WSA_IO_PENDING)
+        if (error != WSA_IO_PENDING && error != 0)
         {
+            if(error == 10035)
+                continue;
             qDebug() << "Connection::WSARecv() failed with error" << error;
             return false;
         }
@@ -193,10 +185,19 @@ bool Connection::recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]){
         bytes_to_read -= n;
         if (n == 0)
             break;
-
     }
     qDebug() << "Client::recv() buffer contents: " << buffer;
     return true;
+}
+
+int Connection::recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]){
+    DWORD bytes_to_read = BUFFERSIZE;
+    char * bp = buffer;
+    int n;
+    int serverlen = sizeof(server);
+    n = ::recvfrom(s, bp, bytes_to_read, 0, (struct sockaddr *)&server, &serverlen);
+
+    return n;
 }
 
 

@@ -47,10 +47,10 @@ public:
     bool WSAWaitForMultipleEvents(WSAEVENT &event);
 
     bool send(SOCKET &sd, char buffer[]);
-    int recv(SOCKET &sd, char buffer[]);
+    bool recv(SOCKET &sd, char buffer[]);
 
     bool sendto(SOCKET &s, sockaddr_in &server, char buffer[]);
-    bool recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
+    int recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
 
 };
 

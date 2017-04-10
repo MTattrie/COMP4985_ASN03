@@ -102,30 +102,32 @@ void Client::runTCP(){
             return;
         WSAResetEvent(readEvent);
 
-        int n = conn.recv(socket_tcp, rbuf);
-        if(n<=0)
-            continue;
+        if(!conn.recv(socket_tcp, rbuf))
+            continue;        
 
         int command = rbuf[0];
+
+        qDebug()<<"command : " << command;
+
         switch(command){
             case HEADER:
                 char header[BUFFERSIZE - 1];
-                memcpy(header, &rbuf[1], n-1);
-                emit receivedHeader(header, n-1);
+                memcpy(header, &rbuf[1], BUFFERSIZE-1);
+                emit receivedHeader(header, BUFFERSIZE-1);
                 break;
             case AVAILSONG:
                 char availSongs[BUFFERSIZE - 1];
-                memcpy(availSongs, &rbuf[1], n-1);
+                memcpy(availSongs, &rbuf[1], BUFFERSIZE-1);
                 emit receivedAvailSongs(availSongs);
                 break;
             case PLAYLIST:
                 char playlist[BUFFERSIZE - 1];
-                memcpy(playlist, &rbuf[1], n-1);
+                memcpy(playlist, &rbuf[1], BUFFERSIZE-1);
                 emit receivedPlaylist(playlist);
                 break;
             case PROGRESS:
                 char progressData[BUFFERSIZE - 1];
-                memcpy(progressData, &rbuf[1], n-1);
+                memcpy(progressData, &rbuf[1], BUFFERSIZE-1);
                 emit receivedProgressData(progressData);
                 break;
         }
@@ -142,12 +144,17 @@ void Client::runUDP(){
         return;
     if(!conn.WSAEventSelect(socket_udp, readEvent, FD_READ))
         return;
+    sockaddr_in server;
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = inet_addr("234.57.7.8");
+    server.sin_port = htons(7000);
+
     while (true) {
         if(!conn.WSAWaitForMultipleEvents(readEvent))
             return;
         WSAResetEvent(readEvent);
 
-        int n = conn.recv(socket_udp, rbuf);
+        int n = conn.recvfrom(socket_udp, server, rbuf);
         if(n<=0)
             continue;
         int command = rbuf[0] - '0';
