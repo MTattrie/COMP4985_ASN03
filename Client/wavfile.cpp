@@ -149,7 +149,7 @@ bool WavFile::readHeader()
     return result;
 }
 
-bool WavFile::readHeader(char *data, qint64 len){
+bool WavFile::readHeader(const char *data, qint64 len){
     CombinedHeader header;
     bool result = true;
     qDebug()<<"data : " << data << ", len : " << len;

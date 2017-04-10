@@ -67,6 +67,7 @@ private:
     void initAudioOuput();
     bool setAudioHeader(QAudioFormat format);
     void sendHeader();
+    void removePlaylist();
 };
 
 #endif // MAINWINDOW_H

@@ -30,6 +30,8 @@ public:
     bool readHeader(char *data, qint64 len);
     void resetPlayer();
     qint64 bytesAvailable() const;
+    qint64 audioBufferSize() const;
+
 
 private:
     qint64     audio_pos;

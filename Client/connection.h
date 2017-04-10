@@ -1,13 +1,12 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
+#include "packet.h"
 
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
 #include <string>
 
-#include <iostream>
-#include <fstream>
 using std::string;
 
 #define SERVER_TCP_PORT 7000
@@ -48,10 +47,10 @@ public:
     bool WSAWaitForMultipleEvents(WSAEVENT &event);
 
     bool send(SOCKET &sd, char buffer[]);
-    int recv(SOCKET &sd, char buffer[]);
+    bool recv(SOCKET &sd, char buffer[]);
 
     bool sendto(SOCKET &s, sockaddr_in &server, char buffer[]);
-    bool recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
+    int recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
 
 };
 

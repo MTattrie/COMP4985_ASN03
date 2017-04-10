@@ -1,12 +1,11 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include "connection.h"
 #include <QObject>
-
 #include <stdio.h>
 #include <winsock2.h>
 
-#include "connection.h"
 
 class Client : public QObject
 {
@@ -29,6 +28,8 @@ signals:
     void receivedChunkData(char *data, qint64 len);
     void receivedAvailSongs(char *);
     void receivedPlaylist(char *);
+    void receivedProgressData(char *);
+
 public slots:
     void requestSong(QString song);
 

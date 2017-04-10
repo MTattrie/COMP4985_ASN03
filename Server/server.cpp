@@ -267,7 +267,6 @@ void Server::runUDP(){
             continue;
         }
 
-        qDebug()<<++count;
         QByteArray data = streamQueue.front();
         SI->DataBuf.buf = data.data();
         SI->DataBuf.len = data.size();
@@ -326,6 +325,7 @@ void Server::sendToClient(int client_num, int command, QByteArray data){
     LPSOCKET_INFORMATION SI = client_addresses.at(client_num);
     data.prepend(command);
 
+
     ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
     memset(SI->Buffer, 0, sizeof(SI->Buffer));
     memcpy(SI->Buffer, data.data(), data.size());
@@ -334,9 +334,6 @@ void Server::sendToClient(int client_num, int command, QByteArray data){
     SI->BytesToSend = BUFFERSIZE;
     SI->BytesSEND = 0;
 
-    qDebug()<<"SI->Buffer : " << SI->Buffer;
-
     conn.WSASend(SI, WorkerRoutine_UDPSend);
-    qDebug()<< "sendToClient" ;
 }
 

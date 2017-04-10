@@ -86,10 +86,7 @@ void MainWindow::on_addPlaylistBTN_clicked()
 
     QString itemText = index.data(Qt::DisplayRole).toString();
 
-
-    playlist_model->insertRow(playlist_model->rowCount());
-    QModelIndex row = playlist_model->index(playlist_model->rowCount()-1);
-    playlist_model->setData(row, itemText);
+    addPlaylist(itemText);
 }
 
 void MainWindow::on_skipBTN_clicked()
@@ -97,7 +94,7 @@ void MainWindow::on_skipBTN_clicked()
     if(audioPlayer->isPlaying()){
         //audioPlayer->pause();
         audio->stop();
-        playlist_model->removeRow(0);
+        removePlaylist();
         playNextSong();
     }
 }
@@ -165,7 +162,7 @@ void MainWindow::handleStateChanged(QAudio::State newState)
     switch (newState) {
         case QAudio::IdleState:
             qDebug() << "IdleState";
-            playlist_model->removeRow(0);
+            removePlaylist();
             audio->stop();
             playNextSong();
             break;
@@ -196,8 +193,9 @@ void MainWindow::handleChunkStream(qint64 len, qint64 pos){
 
 void MainWindow::sendHeader(){
     server.addStreamData(audioPlayer->readHeaderData().prepend('8'));
-    //server.addStreamData("HEADER");
-
+    QString progress = QString::number(audioPlayer->pos()) + "," +  QString::number(audioPlayer->audioBufferSize())  + ",";
+    qDebug()<<progress;
+    server.addStreamData(QByteArray(progress.toStdString().c_str()).prepend('9'));
 }
 
 void MainWindow::on_serverStartBTN_clicked()
@@ -236,6 +234,9 @@ void MainWindow::handleNewClient(int client_num)
     qDebug()<< "handleNewClient" ;
     if(audioPlayer->isPlaying()){ // SendHeader
         server.sendToClient(client_num, HEADER, audioPlayer->readHeaderData());
+        QString progress = QString::number(audioPlayer->pos()) + "," +  QString::number(audioPlayer->audioBufferSize()) + ",";
+        qDebug()<<progress;
+        server.sendToClient(client_num, PROGRESS, QByteArray(progress.toStdString().c_str()));
     }
     //Send list of songs.
 
@@ -251,4 +252,19 @@ void MainWindow::handleNewClient(int client_num)
     server.sendToClient(client_num, AVAILSONG, QByteArray(availableSongs.toStdString().c_str()));
     server.sendToClient(client_num, PLAYLIST, QByteArray(playList.toStdString().c_str()));
 
+}
+void MainWindow::removePlaylist(){
+    playlist_model->removeRow(0);
+    QString playList;
+    foreach(QString item, playlist_model->stringList()){
+        playList += item + "/";
+    }
+    server.broadcast(PLAYLIST, QByteArray(playList.toStdString().c_str()));
+}
+
+void MainWindow::addPlayList(QString item){
+    playlist_model->insertRow(playlist_model->rowCount());
+    QModelIndex row = playlist_model->index(playlist_model->rowCount()-1);
+    playlist_model->setData(row, item);
+    server.broadcast(ADDLIST, QByteArray(item.toStdString().c_str()));
 }
