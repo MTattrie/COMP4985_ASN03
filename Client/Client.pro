@@ -27,13 +27,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
         client.cpp \
         wavfile.cpp \
-    connection.cpp
+    connection.cpp \
+    audioplayer.cpp
 
 HEADERS  += mainwindow.h \
             client.h\
             wavfile.h \
     connection.h \
-    packet.h
+    packet.h \
+    audioplayer.h
 
 FORMS    += mainwindow.ui
 

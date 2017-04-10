@@ -118,7 +118,7 @@ background:transparent
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="button_FastForward">
     <property name="geometry">
      <rect>
       <x>280</x>
@@ -156,7 +156,7 @@ background:transparent
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_5">
+   <widget class="QPushButton" name="button_rewind">
     <property name="geometry">
      <rect>
       <x>120</x>

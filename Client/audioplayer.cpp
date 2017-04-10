@@ -62,7 +62,7 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
         audio_pos = audio_pos + chunk;
 
         if(audio_pos >= audio_buffer.size()){
-            playing = false;
+            //playing = false;
             emit songFinished();
         }
     }

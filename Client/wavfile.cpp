@@ -148,3 +148,35 @@ bool WavFile::readHeader()
     m_headerLength = pos();
     return result;
 }
+
+bool WavFile::readHeader(char *data, qint64 len){
+    CombinedHeader header;
+    bool result = true;
+    qDebug()<<"data : " << data << ", len : " << len;
+    memcpy(reinterpret_cast<char *>(&header), data, sizeof(CombinedHeader));
+
+    qDebug()<<reinterpret_cast<char *>(&header);
+    if ((memcmp(&header.riff.descriptor.id, "RIFF", 4) == 0
+        || memcmp(&header.riff.descriptor.id, "RIFX", 4) == 0)
+        && memcmp(&header.riff.type, "WAVE", 4) == 0
+        && memcmp(&header.wave.descriptor.id, "fmt ", 4) == 0
+        && (header.wave.audioFormat == 1 || header.wave.audioFormat == 0)) {
+        // Establish format
+        if (memcmp(&header.riff.descriptor.id, "RIFF", 4) == 0)
+            m_fileFormat.setByteOrder(QAudioFormat::LittleEndian);
+        else
+            m_fileFormat.setByteOrder(QAudioFormat::BigEndian);
+
+        int bps = qFromLittleEndian<quint16>(header.wave.bitsPerSample);
+        m_fileFormat.setChannelCount(qFromLittleEndian<quint16>(header.wave.numChannels));
+        m_fileFormat.setCodec("audio/pcm");
+        m_fileFormat.setSampleRate(qFromLittleEndian<quint32>(header.wave.sampleRate));
+        m_fileFormat.setSampleSize(qFromLittleEndian<quint16>(header.wave.bitsPerSample));
+        m_fileFormat.setSampleType(bps == 8 ? QAudioFormat::UnSignedInt : QAudioFormat::SignedInt);
+
+    } else {
+        result = false;
+    }
+    m_headerLength = pos();
+    return result;
+}
