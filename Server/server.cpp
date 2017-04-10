@@ -111,6 +111,10 @@ void Server::readThread(){
 
     client_addresses.push_back(SI);
 
+    emit newClientConnected(client_addresses.size() - 1);
+
+    SI->thisObj = this;
+    this->receivedCommand(1);
     while(true){
         if(!conn.WSAWaitForMultipleEvents(readEvent))
             break;
@@ -153,31 +157,27 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
 
         int command = SI->Buffer[0];
 
-        string filename(SI->Buffer + 1);
-        string filelocation = "../assets/musics/" + filename;
-        std::ifstream fin(filelocation, std::ios::in | std::ifstream::binary);
-        std::vector<char> buffer;
-        std::ofstream outfile ("../assets/musics/test1.wav", std::ios_base::app | std::ios_base::out | std::ios::binary);
-
-
-        std::copy(std::istream_iterator<char>(fin), std::istream_iterator<char>(), std::back_inserter(buffer));
-
-        for(size_t i = 0; i < buffer.size(); i += BUFFERSIZE) {
-            auto last = min(buffer.size(), i + BUFFERSIZE);
-            packet_queue.push(string(buffer.begin() + i, buffer.begin() + last));
-        }
-        outfile.close();
-
         //parse command
         SI->DataBuf.buf = SI->Buffer;
         SI->DataBuf.len = BUFFERSIZE;
 
+        qDebug() << "Server::WorkerRoutine_RecvCommand receved command :  " <<command;
+
         switch(command){
-        case 1://send list using tcp
-            conn.WSASend(SI, WorkerRoutine_SendList);
+        case 0: // upload song
             return;
-        case 3:
-            //recv song
+        case 1: //download song
+            //conn.WSASend(SI, WorkerRoutine_SendList);
+            return;
+        case 2: //add list
+            return;
+        case 3: //play or pause
+        case 4: // fastforward
+        case 5: // rewind
+        case 6: // skip track
+            emit ((Server *)(SI->thisObj))->receivedCommand(command);
+            return;
+        case 7: //stream
             return;
         }
     }
@@ -273,66 +273,15 @@ void Server::runUDP(){
         SI->DataBuf.len = data.size();
         SI->BytesToSend = data.size();
         SI->BytesSEND = 0;
-        qDebug()<<"BytesToSend : " << SI->BytesToSend;
+        //qDebug()<<"BytesToSend : " << SI->BytesToSend;
 
         if(!conn.WSASendTo(SI, WorkerRoutine_UDPSend)) {
             continue;
         }
 
-        qDebug() << "UDPMulticaset() finished sending to group.";
+        //qDebug() << "UDPMulticaset() finished sending to group.";
         streamQueue.pop_front();
     }
-    /*
-    while(true){
-        //Sleep(2000);
-
-
-        if(packet_queue.empty()){
-            count = 0;
-            continue;
-        }
-
-        qDebug()<<++count;
-        std::string data = packet_queue.front();
-        SI->DataBuf.buf = const_cast<char*>(data.c_str());
-        SI->BytesToSend = data.size();
-
-        if(!conn.WSASendTo(SI, WorkerRoutine_UDPSend)) {
-            continue;
-        }
-
-        packet_queue.pop();
-        Sleep(10);
-
-        qDebug() << "UDPMulticaset() finished sending to group.";
-
-    }*/
-    /*
-    sockaddr_in InternetAddr;
-    InternetAddr.sin_family = AF_INET;
-    InternetAddr.sin_addr.s_addr = inet_addr("234.57.7.8");
-    InternetAddr.sin_port = htons(7000);
-    while(true){
-        //Sleep(2000);
-
-
-        if(packet_queue.empty()){
-            count = 0;
-            continue;
-        }
-
-        qDebug()<<++count;
-
-        DWORD bytes_to_send = BUFFERSIZE;
-
-        sendto(socket_udp, packet_queue.front().c_str(), bytes_to_send, 0, (struct sockaddr *)&InternetAddr, sizeof(InternetAddr));
-
-        packet_queue.pop();
-        Sleep(1);
-
-        qDebug() << "UDPMulticaset() finished sending to group.";
-
-    }*/
 }
 
 void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
@@ -349,11 +298,45 @@ void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
    {
        conn.WSASendTo(SI, WorkerRoutine_UDPSend);
    }
+}
 
+void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
+   LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+{
+    LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
+
+    if(!conn.checkError(SI, Error))
+        return;
+
+   SI->BytesSEND += BytesTransferred;
+   SI->DataBuf.buf = SI->Buffer + SI->BytesSEND;
+   SI->DataBuf.len = BUFFERSIZE - SI->BytesSEND;
+
+   if (SI->BytesSEND < SI->BytesToSend)
+   {
+       conn.WSASendTo(SI, WorkerRoutine_TCPSend);
+   }
 }
 
 void Server::addStreamData(QByteArray data){
-    qDebug() << "addStreamData";
-
     streamQueue.push_back(data);
 }
+
+void Server::sendToClient(int client_num, int command, QByteArray data){
+    LPSOCKET_INFORMATION SI = client_addresses.at(client_num);
+    data.prepend(command);
+
+    ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+    memset(SI->Buffer, 0, sizeof(SI->Buffer));
+    memcpy(SI->Buffer, data.data(), data.size());
+    SI->DataBuf.buf = SI->Buffer;
+    SI->DataBuf.len = BUFFERSIZE;
+    SI->BytesToSend = BUFFERSIZE;
+    SI->BytesSEND = 0;
+
+    qDebug()<<"SI->Buffer : " << SI->Buffer;
+
+    conn.WSASend(SI, WorkerRoutine_UDPSend);
+    qDebug()<< "sendToClient" ;
+}
+

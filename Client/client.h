@@ -23,10 +23,12 @@ public:
     void startUDP();
     void connectUDP();
     void runUDP();
+    void reqeustCommand(int command);
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
-
+    void receivedAvailSongs(char *);
+    void receivedPlaylist(char *);
 public slots:
     void requestSong(QString song);
 

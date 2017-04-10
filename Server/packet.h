@@ -15,8 +15,12 @@ using std::string;
 #define REWIND      5
 #define SKIPTRACK   6
 #define STREAM      7
+#define HEADER      8
 
-#define BUFFERSIZE 40000
+#define AVAILSONG     10
+#define PLAYLIST      11
+
+#define BUFFERSIZE 20000
 
 
 #endif

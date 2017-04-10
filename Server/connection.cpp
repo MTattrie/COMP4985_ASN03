@@ -239,7 +239,7 @@ bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
         }
         qDebug() << "Connection::WSASendTo() WSA_IO_PENDING";
     }
-    qDebug() << "Connection::WSASendTo() SendBytes : " << SendBytes;
+   // qDebug() << "Connection::WSASendTo() SendBytes : " << SendBytes;
 
     return true;
 }

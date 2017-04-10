@@ -45,6 +45,9 @@ void MainWindow::initAudioOuput(){
     audioPlayer = new AudioPlayer();
     connect(audioPlayer, SIGNAL(songFinished()), this, SLOT(handleSongFinished()));
     connect(audioPlayer, SIGNAL(streamChunkAudio(qint64,qint64)), this, SLOT(handleChunkStream(qint64,qint64)));
+    connect(&server, SIGNAL(receivedCommand(int)), this, SLOT(handleReceivedCommand(int)));
+    connect(&server, SIGNAL(newClientConnected(int)), this, SLOT(handleNewClient(int)));
+
 }
 
 bool MainWindow::setAudioHeader(QAudioFormat format){
@@ -128,6 +131,8 @@ void MainWindow::on_ffBTN_clicked()
     audio = new QAudioOutput(format, this);
     connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
     audio->start(audioPlayer);
+    audio->setVolume(0);
+
 }
 
 void MainWindow::on_playBTN_clicked()
@@ -185,14 +190,12 @@ void MainWindow::handleStateChanged(QAudio::State newState)
 }
 
 void MainWindow::handleChunkStream(qint64 len, qint64 pos){
-    server.addStreamData(audioPlayer->readChunkData(len, pos).prepend("1"));
+    server.addStreamData(audioPlayer->readChunkData(len, pos).prepend('7'));
     //server.addStreamData("DATA");
 }
 
 void MainWindow::sendHeader(){
-    server.addStreamData(audioPlayer->readHeaderData().prepend("0"));
-    qDebug()<< "sendHeader" << audioPlayer->readHeaderData();
-
+    server.addStreamData(audioPlayer->readHeaderData().prepend('8'));
     //server.addStreamData("HEADER");
 
 }
@@ -207,5 +210,45 @@ void MainWindow::on_serverStartBTN_clicked()
 
     if(server.setPort(port)){
     }
+
+}
+
+void MainWindow::handleReceivedCommand(int command)
+{
+    switch(command){
+    case 3: //play or pause
+        on_playBTN_clicked();
+        return;
+    case 4: // fastforward
+        //on_ffBTN_clicked(); //Need to broadcast to all clients
+        return;
+    case 5: // rewind
+        on_rewindBTN_clicked();
+        return;
+    case 6: // skip track
+        on_skipBTN_clicked();
+        return;
+    }
+}
+
+void MainWindow::handleNewClient(int client_num)
+{
+    qDebug()<< "handleNewClient" ;
+    if(audioPlayer->isPlaying()){ // SendHeader
+        server.sendToClient(client_num, HEADER, audioPlayer->readHeaderData());
+    }
+    //Send list of songs.
+
+    QString availableSongs;
+    foreach(QString item, available_song_model->stringList()){
+        availableSongs += item + "/";
+    }
+    QString playList;
+    foreach(QString item, playlist_model->stringList()){
+        playList += item + "/";
+    }
+
+    server.sendToClient(client_num, AVAILSONG, QByteArray(availableSongs.toStdString().c_str()));
+    server.sendToClient(client_num, PLAYLIST, QByteArray(playList.toStdString().c_str()));
 
 }

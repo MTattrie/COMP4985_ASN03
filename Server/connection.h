@@ -17,6 +17,7 @@ typedef struct _SOCKET_INFORMATION {
    DWORD BytesSEND;
    DWORD BytesRECV;
    DWORD BytesToSend;
+   void *thisObj;
 } SOCKET_INFORMATION, * LPSOCKET_INFORMATION;
 
 

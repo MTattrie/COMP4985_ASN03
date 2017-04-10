@@ -46,6 +46,10 @@ private slots:
 
     void on_serverStartBTN_clicked();
 
+    void handleReceivedCommand(int command);
+
+    void handleNewClient(int client_num);
+
 private:
     Ui::MainWindow *ui;
 

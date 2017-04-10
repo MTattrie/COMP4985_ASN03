@@ -7,9 +7,18 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    available_song_model = new QStringListModel(this);
+    playlist_model = new QStringListModel(this);
+
+    // Glue model and view together
+    ui->listView_availSongs->setModel(available_song_model);
+    ui->listView_playlist->setModel(playlist_model);
+
     QObject::connect(this, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
     QObject::connect(&client, SIGNAL( receivedHeader(char*, qint64)), this, SLOT(handleReceivedHeader(char*,qint64)));
     QObject::connect(&client, SIGNAL( receivedChunkData(char*,qint64)), this, SLOT(handleReceivedChunk(char*,qint64)));
+    QObject::connect(&client, SIGNAL( receivedAvailSongs(char*)), this, SLOT(handleReceivedAvailSongs(char*)));
+    QObject::connect(&client, SIGNAL( receivedPlaylist(char*)), this, SLOT(handleReceivedPlaylist(char*)));
 
 
     std::thread(&Client::start, &client).detach();
@@ -34,7 +43,23 @@ void MainWindow::on_button_addSong_clicked()
 
 void MainWindow::on_button_play_clicked()
 {
-    playNextSong();
+    client.reqeustCommand(PLAYPAUSE);
+}
+
+void MainWindow::on_button_skip_clicked()
+{
+    client.reqeustCommand(SKIPTRACK);
+}
+
+
+void MainWindow::on_button_FastForward_clicked()
+{
+    client.reqeustCommand(FASTFORWORD);
+}
+
+void MainWindow::on_button_rewind_clicked()
+{
+    client.reqeustCommand(REWIND);
 }
 
 void MainWindow::initAudioOuput(){
@@ -54,24 +79,8 @@ bool MainWindow::setAudioHeader(QAudioFormat format){
     return true;
 }
 
-void MainWindow::playNextSong(){
 
-}
 
-void MainWindow::on_button_skip_clicked()
-{
-
-}
-
-void MainWindow::on_pushButton_5_clicked()
-{
-
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-
-}
 
 void MainWindow::on_button_download_clicked()
 {
@@ -90,6 +99,9 @@ void MainWindow::handleReceivedHeader(char *data, qint64 len)
         if(!setAudioHeader(audioPlayer->fileFormat()))
             return;
         audioPlayer->resetPlayer();
+        if(isSetHeader){
+            playlist_model->removeRow(0);
+        }
         isSetHeader = true;
     }
     else{
@@ -107,4 +119,16 @@ void MainWindow::handleReceivedChunk(char *data, qint64 len){
         audioPlayer->start();
     }
 
+}
+
+
+void MainWindow::handleReceivedAvailSongs(char *list){
+    QStringList stringList = QString(list).split('/');
+    stringList.removeLast();
+    available_song_model->setStringList(stringList);
+}
+void MainWindow::handleReceivedPlaylist(char *list){
+    QStringList stringList = QString(list).split('/');
+    stringList.removeLast();
+    playlist_model->setStringList(stringList);
 }

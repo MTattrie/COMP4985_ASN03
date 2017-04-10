@@ -76,7 +76,7 @@
      <string>Connect</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="button_FastForward">
     <property name="geometry">
      <rect>
       <x>240</x>
@@ -102,7 +102,7 @@
      <string>Skip Track</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_5">
+   <widget class="QPushButton" name="button_rewind">
     <property name="geometry">
      <rect>
       <x>70</x>
