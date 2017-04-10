@@ -6,28 +6,42 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>836</width>
-    <height>455</height>
+    <width>655</width>
+    <height>458</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background: url(../assets/ui/background2)</string>
+   <string notr="true"/>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonIconOnly</enum>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QSlider" name="ProgressSlider">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>20</x>
       <y>330</y>
-      <width>581</width>
-      <height>16</height>
+      <width>611</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background:transparent</string>
+     <string notr="true">QSlider::groove:horizontal {
+	border: #e8e9ea;
+	height: 5px;
+}
+
+QSlider::add-page:qlineargradient {
+	background: #e8e9ea;
+}
+
+QSlider::sub-page:qlineargradient {
+	background: #3D674D;
+}</string>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -36,24 +50,36 @@
    <widget class="QLCDNumber" name="TrackTime">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>30</x>
       <y>300</y>
       <width>64</width>
-      <height>23</height>
+      <height>21</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(75, 111, 125);
+border-color: rgb(255, 255, 255);
+background:transparent
+</string>
     </property>
    </widget>
    <widget class="QPushButton" name="button_play">
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>200</x>
       <y>360</y>
-      <width>71</width>
-      <height>18</height>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
+    <property name="toolTip">
      <string>Play/Pause</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/play)</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit">
@@ -65,6 +91,9 @@
       <height>20</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>IP Address</string>
     </property>
@@ -72,76 +101,128 @@
    <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>280</x>
       <y>90</y>
-      <width>111</width>
-      <height>18</height>
+      <width>91</width>
+      <height>21</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Connect to Server</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/connect)
+</string>
+    </property>
     <property name="text">
-     <string>Connect</string>
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>280</x>
       <y>360</y>
-      <width>80</width>
-      <height>18</height>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
+    <property name="toolTip">
      <string>Fast Forward</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/fastForward)</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="button_skip">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>360</x>
       <y>360</y>
-      <width>80</width>
-      <height>18</height>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
+    <property name="toolTip">
      <string>Skip Track</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/skipTrack)</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_5">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>120</x>
       <y>360</y>
-      <width>80</width>
-      <height>18</height>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
+    <property name="toolTip">
      <string>Rewind</string>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/rewind)</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
    </widget>
-   <widget class="QSlider" name="horizontalSlider">
+   <widget class="QSlider" name="volumeSlider">
     <property name="geometry">
      <rect>
       <x>490</x>
       <y>360</y>
       <width>121</width>
-      <height>16</height>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QSlider::groove:horizontal {
+	border: #e8e9ea;
+	height: 17px;
+}
+
+QSlider::add-page:qlineargradient {
+	background: #e8e9ea;
+}
+
+QSlider::sub-page:qlineargradient {
+	background: #3D674D;
+}</string>
+    </property>
+    <property name="value">
+     <number>99</number>
+    </property>
+    <property name="sliderPosition">
+     <number>99</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
+    </property>
+    <property name="invertedAppearance">
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_2">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>110</x>
       <y>300</y>
-      <width>501</width>
+      <width>521</width>
       <height>20</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);
+</string>
     </property>
    </widget>
    <widget class="QListView" name="listView_playlist">
@@ -154,7 +235,10 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(255, 255, 255);</string>
+     <string notr="true">color: rgb(255, 255, 255);
+border-color: rgb(255, 255, 255);
+background:transparent
+</string>
     </property>
    </widget>
    <widget class="QListView" name="listView_availSongs">
@@ -163,50 +247,74 @@
       <x>430</x>
       <y>30</y>
       <width>201</width>
-      <height>171</height>
+      <height>201</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(255, 255, 255);</string>
+     <string notr="true">color: rgb(255, 255, 255);
+border-color: rgb(255, 255, 255);
+background:transparent</string>
     </property>
    </widget>
    <widget class="QPushButton" name="button_addSong">
     <property name="geometry">
      <rect>
       <x>440</x>
-      <y>220</y>
-      <width>181</width>
-      <height>20</height>
+      <y>240</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
+    <property name="toolTip">
      <string>Add Song to Playlist</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/addSong)</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="button_download">
     <property name="geometry">
      <rect>
-      <x>540</x>
-      <y>250</y>
-      <width>91</width>
-      <height>21</height>
+      <x>580</x>
+      <y>240</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
+    <property name="toolTip">
      <string>Download Song</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/download)</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_8">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>250</y>
-      <width>80</width>
-      <height>21</height>
+      <x>510</x>
+      <y>240</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Upload Song&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/upload)</string>
+    </property>
     <property name="text">
-     <string>Upload Song</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -217,6 +325,11 @@
       <width>201</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);
+background:transparent
+</string>
     </property>
     <property name="text">
      <string>Current Playlist</string>
@@ -231,24 +344,29 @@
       <height>16</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);
+background:transparent
+</string>
+    </property>
     <property name="text">
      <string>Available Songs</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_3">
+   <widget class="QLabel" name="label_volume">
     <property name="geometry">
      <rect>
-      <x>450</x>
-      <y>350</y>
-      <width>31</width>
-      <height>31</height>
+      <x>440</x>
+      <y>360</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>../assets/speaker.png</pixmap>
+     <pixmap>../assets/ui/volume.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -263,6 +381,9 @@
       <height>20</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>Port Number</string>
     </property>
@@ -270,66 +391,49 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>660</x>
-      <y>10</y>
-      <width>141</width>
+      <x>270</x>
+      <y>140</y>
+      <width>111</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Peer to Peer - Microphone</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_5">
-    <property name="geometry">
-     <rect>
-      <x>660</x>
-      <y>30</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Client IP</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_6">
-    <property name="geometry">
-     <rect>
-      <x>660</x>
-      <y>80</y>
-      <width>61</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Client Port#</string>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="lineEdit_4">
     <property name="geometry">
      <rect>
-      <x>660</x>
-      <y>50</y>
+      <x>270</x>
+      <y>160</y>
       <width>113</width>
       <height>20</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
-     <string>Peer IP Address</string>
+     <string>Client IP Address</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_5">
     <property name="geometry">
      <rect>
-      <x>660</x>
-      <y>100</y>
+      <x>270</x>
+      <y>190</y>
       <width>113</width>
       <height>20</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background: rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
-     <string>Peer Port</string>
+     <string>Client Port Number</string>
     </property>
    </widget>
   </widget>
@@ -338,7 +442,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>836</width>
+     <width>655</width>
      <height>19</height>
     </rect>
    </property>

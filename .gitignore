@@ -1,3 +1,6 @@
 build*/*
 Client/Client.pro.user
 Server/Server.pro.user
+Client/.qmake.stash
+Client/Makefile*
+Client/debug

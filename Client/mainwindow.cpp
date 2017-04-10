@@ -21,7 +21,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     findAvailableSongs();
     initAudioOuput();
+
+    m_pPalette	= new QPalette();
+    m_pPixmap = new QPixmap("../assets/ui/background.jpg");
+
+    QPalette* palette = new QPalette();
+    palette->setBrush(QPalette::Background,*(new QBrush(*(m_pPixmap))));
+    setPalette(*palette);
+
+    connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
+
+//    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
 }
+
+
 void MainWindow::findAvailableSongs(){
     QStringList nameFilter("*.wav");
     QDir directory("../assets/musics");
@@ -80,6 +93,7 @@ void MainWindow::playNextSong(){
         if(playlist_model->stringList().length() <= 0)
             return;
         isPlaying = true;
+        ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/play);}"));
         qDebug() << audio;
         if(audio->state() == QAudio::SuspendedState){
             audio->resume();
@@ -108,6 +122,7 @@ void MainWindow::playNextSong(){
     }else{
         audio->suspend();
         isPlaying = false;
+        ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
     }
 }
 
@@ -190,6 +205,7 @@ void MainWindow::on_pushButton_3_clicked()
 
 void MainWindow::on_button_download_clicked()
 {
+    this->setWindowTitle("hello");
     QModelIndex index = ui->listView_availSongs->currentIndex();
     if(index.row() < 0)
         return;
@@ -197,4 +213,49 @@ void MainWindow::on_button_download_clicked()
     QString itemText = index.data(Qt::DisplayRole).toString();
 
     emit requestSong(itemText);
+}
+
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: decodeMessage
+--
+-- DATE: April 7, 2017
+--
+-- DESIGNER:
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: void MainWindow::decodeMessage(QString message)
+--                  QString message: Text data recevied from the server
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Called when received a message from the server.
+--  Reads the first character of the received message and handle the message by the code.
+----------------------------------------------------------------------------------------------------------------------*/
+void MainWindow::decodeMessage(QString message) {
+    qDebug() << "decodeMessage";
+
+    if(!message.at(0).isNumber())
+        return;
+    switch(message.at(0).digitValue()){
+    case 1: // Dong to Download
+
+        break;
+    case 2: // Update Playlist
+
+        break;
+    case 3: // Update Available Songs
+
+        break;
+    default:
+        break;
+    }
+}
+
+
+void MainWindow::setVolume(int value)
+{
+    audio->setVolume((float)value / 100);
 }

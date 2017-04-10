@@ -7,6 +7,8 @@
 #include <QDebug>
 #include <QAudioOutput>
 #include <QBuffer>
+#include <QtGui>
+#include <QPalette>
 #include "wavfile.h"
 
 
@@ -23,6 +25,13 @@ public:
     ~MainWindow();
 
     void findAvailableSongs();
+    void decodeMessage(QString message);
+
+    void resizeEvent (QResizeEvent* event)
+      {
+          m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
+          setPalette(*m_pPalette);
+      };
 
 signals:
     void requestSong(QString song);
@@ -42,6 +51,8 @@ private slots:
 
     void on_button_download_clicked();
 
+    void setVolume(int value);
+
 private:
     Ui::MainWindow *ui;
     QStringListModel *available_song_model;
@@ -49,6 +60,8 @@ private:
     QAudioOutput* audio; // class member.
     QBuffer *audioBuffer;
     WavFile sourceFile;
+    QPixmap* m_pPixmap;
+    QPalette* m_pPalette;
 
     bool isPlaying;
     bool isForwarding;
