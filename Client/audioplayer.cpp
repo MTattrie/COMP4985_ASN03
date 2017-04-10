@@ -65,10 +65,11 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
 
         audio_pos += chunk;
         progress_current += chunk;
-        emit progressAudio((progress_current/(double)progress_max * 100));
+        emit progressAudio((progress_current/(double)progress_max) * 100);
 
         if(audio_pos >= audio_buffer.size()){
-            //playing = false;
+            qDebug()<<"audio_pos >= audio_buffer.size()";
+            playing = false;
             emit songFinished();
         }
     }

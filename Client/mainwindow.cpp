@@ -57,11 +57,19 @@ void MainWindow::on_button_addSong_clicked()
 void MainWindow::on_button_play_clicked()
 {
     client.reqeustCommand(PLAYPAUSE);
+    audio->suspend();
+    audioPlayer->pause();
 }
 
 void MainWindow::on_button_skip_clicked()
 {
     client.reqeustCommand(SKIPTRACK);
+    isSetHeader = false;
+    audio->stop();
+    audioPlayer->pause();
+    audio->reset();
+    audioPlayer->resetPlayer();
+    playlist_model->removeRow(0);
 }
 
 
@@ -89,6 +97,9 @@ bool MainWindow::setAudioHeader(QAudioFormat format){
         qWarning() << "Raw audio format not supported by backend, cannot play audio.";
         return false;
     }
+    audio->stop();
+    audioPlayer->pause();
+    audio->reset();
     delete audio;
     audio = new QAudioOutput(format, this);
     return true;
@@ -121,13 +132,16 @@ void MainWindow::handleReceivedHeader(char *data, qint64 len)
 }
 void MainWindow::handleReceivedChunk(char *data, qint64 len){
     audioPlayer->addChunkData(data, len);
-    qDebug()<<"audioPlayer->fileFormat().bytesForDuration(1000000) : " << audioPlayer->fileFormat().bytesForDuration(1000000);
 
     if(!audioPlayer->isPlaying()
             && !audioPlayer->isPaused()
             && audioPlayer->bytesAvailable() >= audioPlayer->fileFormat().bytesForDuration(1000000)){
-        audio->start(audioPlayer);
         audioPlayer->start();
+        audio->start(audioPlayer);
+    }else if(audioPlayer->isPaused()
+             && audioPlayer->bytesAvailable() >= audioPlayer->fileFormat().bytesForDuration(1000000)){
+        audioPlayer->start();
+        audio->resume();
     }
 
 }
@@ -145,6 +159,7 @@ void MainWindow::handleReceivedPlaylist(char *list){
 
 void MainWindow::handleReceivedProgressData(char *progressData){
     QStringList stringList = QString(progressData).split(',');
+    qDebug()<<stringList;
     audioPlayer->setProgressData(stringList.at(0).toInt(), stringList.at(1).toInt());
 }
 
