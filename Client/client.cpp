@@ -16,7 +16,7 @@
 
 Client::Client(QObject *parent) : QObject(parent)
 {
-
+    isDonwloading=false;
 }
 
 
@@ -175,17 +175,23 @@ void Client::runUDP(){
 
 
 void Client::requestSong(QString song){
+    if(isDonwloading)
+        return;
     char buffer[BUFFERSIZE];
+
+    filenames = song;
+    downloads.clear();
 
     QString packet;
     packet.append(DOWNLOAD);
     packet.append(song);
 
     memset((char *)buffer, 0, BUFFERSIZE);
-    memcpy(buffer, packet.toStdString().c_str(), BUFFERSIZE);
+    memcpy(buffer, packet.toStdString().c_str(), packet.size());
 
     if(!conn.send(socket_tcp, buffer))
         return;
+    isDonwloading=true;
 }
 
 void Client::reqeustCommand(int command, QString data){

@@ -93,6 +93,8 @@ private:
 
     void fastforward();
 
+    void writeFile();
+
     void receivedSkipTrack();
     void rewind();
     void playpause();

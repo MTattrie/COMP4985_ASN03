@@ -24,6 +24,10 @@ public:
     void runUDP();
     void reqeustCommand(int command, QString data = "");
     void storeServerDetails(QString hostname, QString port);
+
+    QString filenames;
+    QByteArray downloads;
+    bool isDonwloading;
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
@@ -39,6 +43,8 @@ public slots:
 private:
     std::string serverHostName;
     int portNumber;
+
+
 
 };
 

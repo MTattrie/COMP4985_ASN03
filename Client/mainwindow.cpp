@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <fstream>
+#include <ostream>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -32,6 +35,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->ProgressSlider->setValue(0); //probably remove this line
 //    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
+
+    ui->lineEdit_serverHostname->setText("localhost");
+    ui->lineEdit_serverPortNumber->setText("7000");
 }
 
 
@@ -273,13 +279,19 @@ void MainWindow::playpause(){
         ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
     }
 }
-
+int count = 0;
 void MainWindow::handleReceivedCommand(int command, char *data, int len){
     switch(command){
         case UPLOAD:
             break;
-        case DOWNLOAD:
+        case DOWNLOAD:{
+            client.downloads.append(QByteArray(data, len));
             break;
+        }
+        case COMPLETE:{
+            std::thread(&MainWindow::writeFile, this).detach();
+            break;
+        }
         case ADDLIST:
             addPlaylist(QString(data));
             break;
@@ -313,4 +325,18 @@ void MainWindow::handleReceivedCommand(int command, char *data, int len){
             break;
     }
     delete data;
+}
+
+
+void MainWindow::writeFile(){
+    const QString filename(client.filenames);
+    QFile file(filename);
+    if(file.open(QIODevice::WriteOnly)){
+        file.write(client.downloads, client.downloads.size());
+        file.close();
+    }
+
+    client.filenames.clear();
+    client.filenames.clear();
+    client.isDonwloading=false;
 }

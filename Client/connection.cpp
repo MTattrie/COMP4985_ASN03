@@ -108,7 +108,8 @@ bool Connection::setoptSO_REUSEADDR(SOCKET &s){
 
 bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s){
     struct ip_mreq   MulticastAddress;
-    MulticastAddress.imr_multiaddr.s_addr = inet_addr("234.57.7.8");
+    //MulticastAddress.imr_multiaddr.s_addr = inet_addr("234.57.7.8");
+    MulticastAddress.imr_multiaddr.s_addr = "comp4985";
     MulticastAddress.imr_interface.s_addr = INADDR_ANY;
     if(::setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&MulticastAddress, sizeof(MulticastAddress)) == SOCKET_ERROR)
     {

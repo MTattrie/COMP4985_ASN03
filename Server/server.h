@@ -4,7 +4,8 @@
 #include "connection.h"
 #include <QObject>
 #include <QQueue>
-
+#include <queue>
+#include <QFile>
 
 
 struct Client
@@ -34,6 +35,9 @@ public:
     void startUDP();
     void connectUDP();
     void runUDP();
+
+    bool sendFile(LPSOCKET_INFORMATION &SI, string filename);
+    bool loadFile(QQueue<QByteArray>& packets, const string filename);
 
 
     bool multicast(char *message, const int len);
