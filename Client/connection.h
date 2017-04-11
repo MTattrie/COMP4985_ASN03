@@ -52,6 +52,8 @@ public:
     bool sendto(SOCKET &s, sockaddr_in &server, char buffer[]);
     int recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
 
+
+    int port;
 };
 
 #endif // CONNECTION_H

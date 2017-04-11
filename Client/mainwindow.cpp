@@ -30,7 +30,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
     connect(ui->button_connectToServer,SIGNAL(pressed()),this,SLOT(connectToServer()));
 
-    ui->ProgressSlider->setValue(0); //probably remove this line
+    ui->lineEdit_serverHostname->setText("localhost");
+    ui->lineEdit_serverPortNumber->setText("7000");
+    audio_volume = 99;
+
 }
 
 
@@ -140,6 +143,7 @@ void MainWindow::addChunk(char *data, qint64 len){
             && audioPlayer->bytesAvailable() >= audioPlayer->fileFormat().bytesForDuration(1000000)){
         audioPlayer->start();
         audio->start(audioPlayer);
+        setVolume(audio_volume);
         ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
     }else if(audioPlayer->isPaused()
              && audioPlayer->bytesAvailable() >= audioPlayer->fileFormat().bytesForDuration(1000000)){
@@ -223,6 +227,7 @@ void MainWindow::connectToServer() {
 
 void MainWindow::setVolume(int value)
 {
+    audio_volume = value;
     audio->setVolume((float)value / 100);
 }
 
@@ -245,6 +250,7 @@ void MainWindow::fastforward(){
     delete audio;
     audio = new QAudioOutput(format, this);
     audio->start(audioPlayer);
+    setVolume(audio_volume);
 }
 
 void MainWindow::receivedSkipTrack(){

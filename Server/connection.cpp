@@ -223,7 +223,7 @@ bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
     sockaddr_in InternetAddr;
     InternetAddr.sin_family = AF_INET;
     InternetAddr.sin_addr.s_addr = inet_addr("234.57.7.8");
-    InternetAddr.sin_port = htons(7000);
+    InternetAddr.sin_port = htons(port);
 
     int	client_len = sizeof(InternetAddr);
 
@@ -292,7 +292,6 @@ bool Connection::WSARecvFrom(LPSOCKET_INFORMATION SI,
         }
         qDebug() << "Connection::WSARecvFrom() WSA_IO_PENDING";
     }
-    SI->client_address.sin_port = htons(8000);
     qDebug() << "Connection::WSARecvFrom() Received " << RecvBytes << "bytes.";
     return true;
 }

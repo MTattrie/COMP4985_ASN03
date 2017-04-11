@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <winsock2.h>
 #include <QMainWindow>
 #include <QDir>
 #include <QStringListModel>
@@ -56,8 +57,13 @@ private slots:
     void handleReceivedCommand(int command);
 
     void handleNewClient(int client_num);
+    void handleDisconnetClient(QString);
 
     void handleReceivedAddPlaylist(QString);
+
+    void setProgress(int value);
+    void setVolume(int value);
+
 
 private:
     Ui::MainWindow *ui;
@@ -66,12 +72,15 @@ private:
 
     QStringListModel *available_song_model;
     QStringListModel *playlist_model;
+    QStringListModel *clientlist_model;
+
     QAudioOutput* audio; // class member.
     AudioPlayer *audioPlayer;
 
     Server     server;
 
     bool songFinished;
+    int audio_volume;
 
 
     void playNextSong();

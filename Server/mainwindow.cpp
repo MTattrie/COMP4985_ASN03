@@ -17,16 +17,22 @@ MainWindow::MainWindow(QWidget *parent) :
     // Create model
     available_song_model = new QStringListModel(this);
     playlist_model = new QStringListModel(this);
+    clientlist_model = new QStringListModel(this);
 
     // Glue model and view together
     ui->listView_availSongs->setModel(available_song_model);
     ui->listView_playlist->setModel(playlist_model);
+    ui->listView_clientlist->setModel(clientlist_model);
+
+    ui->serverPort->setText("7000");
 
 
     findAvailableSongs();
     initAudioOuput();
 
-    std::thread(&Server::start, &server).detach();
+    connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
+    audio_volume = 0;
+    ui->volumeSlider->setValue(0);
 }
 
 MainWindow::~MainWindow()
@@ -53,7 +59,10 @@ void MainWindow::initAudioOuput(){
     connect(audioPlayer, SIGNAL(streamChunkAudio(qint64,qint64)), this, SLOT(handleChunkStream(qint64,qint64)));
     connect(&server, SIGNAL(receivedCommand(int)), this, SLOT(handleReceivedCommand(int)));
     connect(&server, SIGNAL(newClientConnected(int)), this, SLOT(handleNewClient(int)));
+    connect(&server, SIGNAL(clientDisconnected(QString)), this, SLOT(handleDisconnetClient(QString)));
     connect(&server, SIGNAL( receivedAddPlaylist(QString)), this, SLOT(handleReceivedAddPlaylist(QString)));
+    connect(audioPlayer, SIGNAL( progressAudio(int)), this, SLOT(setProgress(int)));
+
 
 }
 
@@ -81,8 +90,9 @@ void MainWindow::playNextSong(){
         return;
     audio->start(audioPlayer);
     audioPlayer->start();
-    audio->setVolume(0);
+    setVolume(audio_volume);
     songFinished = false;
+    ui->playBTN->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
 }
 
 void MainWindow::on_addPlaylistBTN_clicked()
@@ -99,6 +109,7 @@ void MainWindow::on_addPlaylistBTN_clicked()
 void MainWindow::on_skipBTN_clicked()
 {
     if(audioPlayer->isPlaying()){
+        ui->playBTN->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/play);}"));
         //audioPlayer->pause();
         audio->stop();
         audioPlayer->resetPlayer();
@@ -110,7 +121,8 @@ void MainWindow::on_skipBTN_clicked()
 
 void MainWindow::on_rewindBTN_clicked()
 {
-    int samplebytes = audioPlayer->fileFormat().bytesForDuration(3000000);
+    audioPlayer->pause();
+    int samplebytes = audioPlayer->fileFormat().bytesForDuration(5000000);
     qint64 pos = audioPlayer->pos() - samplebytes;
 
     qDebug()<< audioPlayer->mypos();
@@ -118,7 +130,6 @@ void MainWindow::on_rewindBTN_clicked()
 
     if(pos<=0)
         pos = 0;
-    audioPlayer->pause();
     audioPlayer->myseek(pos);
     QString progress = QString::number(pos) + "," +  QString::number(audioPlayer->audioBufferSize())  + ",";
     server.TCPBroadCast(REWIND, QByteArray(progress.toStdString().c_str()));
@@ -142,7 +153,7 @@ void MainWindow::on_ffBTN_clicked()
     audio = new QAudioOutput(format, this);
     connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
     audio->start(audioPlayer);
-    audio->setVolume(0);
+    setVolume(audio_volume);
 
     server.TCPBroadCast(FASTFORWORD);
 }
@@ -154,11 +165,13 @@ void MainWindow::on_playBTN_clicked()
         qDebug()<<"Play";
         audioPlayer->start();
         audio->resume();
+        ui->playBTN->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
     }
     else if(audioPlayer->isPlaying()){
         qDebug()<<"Pause";
         audio->suspend();
         audioPlayer->pause();
+        ui->playBTN->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/play);}"));
     }
     else
         playNextSong();
@@ -223,6 +236,7 @@ void MainWindow::on_serverStartBTN_clicked()
         return;
 
     if(server.setPort(port)){
+        std::thread(&Server::start, &server).detach();
     }
 
 }
@@ -243,6 +257,18 @@ void MainWindow::handleReceivedCommand(int command)
         on_skipBTN_clicked();
         return;
     }
+}
+
+void MainWindow::handleDisconnetClient(QString client){
+    QStringList list = clientlist_model->stringList();
+    foreach (QString ip, list) {
+        if(ip.compare(client) == 0) {
+            list.removeOne(ip);
+            break;
+        }
+    }
+
+    clientlist_model->setStringList(list);
 }
 
 void MainWindow::handleNewClient(int client_num)
@@ -267,6 +293,10 @@ void MainWindow::handleNewClient(int client_num)
 
     server.sendToClient(client_num, AVAILSONG, QByteArray(availableSongs.toStdString().c_str()));
     server.sendToClient(client_num, PLAYLIST, QByteArray(playList.toStdString().c_str()));
+
+    clientlist_model->insertRow(clientlist_model->rowCount());
+    QModelIndex row = clientlist_model->index(clientlist_model->rowCount()-1);
+    clientlist_model->setData(row, server.getClientIP(client_num));
 }
 void MainWindow::handleReceivedAddPlaylist(QString item){
     addPlaylist(item);
@@ -286,4 +316,14 @@ void MainWindow::addPlaylist(QString &item){
     QModelIndex row = playlist_model->index(playlist_model->rowCount()-1);
     playlist_model->setData(row, item);
     server.TCPBroadCast(ADDLIST, QByteArray(item.toStdString().c_str()));
+}
+
+void MainWindow::setVolume(int value)
+{
+    audio_volume = value;
+    audio->setVolume((float)value / 100);
+}
+
+void MainWindow::setProgress(int value){
+    ui->ProgressSlider->setValue(value);
 }

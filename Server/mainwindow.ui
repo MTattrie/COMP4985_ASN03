@@ -319,7 +319,7 @@ background:transparent</string>
      <string/>
     </property>
    </widget>
-   <widget class="QListView" name="listView_playlist_2">
+   <widget class="QListView" name="listView_clientlist">
     <property name="geometry">
      <rect>
       <x>20</x>
