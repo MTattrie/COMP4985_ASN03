@@ -15,14 +15,11 @@
 
 using std::string;
 
-
-
-
 Connection conn;
 SOCKET socket_tcp_accept;
 SOCKET socket_tcp_listen;
+struct sockaddr_in client_address;
 SOCKET socket_udp;
-int port = 7000;
 
 std::vector<LPSOCKET_INFORMATION> client_addresses;
 
@@ -42,6 +39,7 @@ void Server::start(){
 bool Server::setPort(QString _port) {
     bool convertOK;
     port = _port.toInt(&convertOK);
+    conn.port = port;
 
     if(!convertOK)
         return false;
@@ -73,12 +71,14 @@ void Server::connectTCP(){
 
 void Server::runTCP() {
     WSAEVENT acceptEvent;
+    client_address = {0};
+    int client_len = sizeof(client_address);
     if(!conn.WSACreateEvent(acceptEvent))
         return;
     std::thread(&Server::acceptThread, this, acceptEvent).detach();
 
     while(TRUE) {
-        socket_tcp_accept = accept(socket_tcp_listen, NULL, NULL);
+        socket_tcp_accept = accept(socket_tcp_listen, (struct sockaddr *)&(client_address), &client_len);
         if(!conn.WSASetEvent(acceptEvent))
             return;
     }
@@ -99,23 +99,41 @@ void Server::acceptThread(WSAEVENT acceptEvent) {
 void Server::readThread(){
     LPSOCKET_INFORMATION SI;
     WSAEVENT readEvent;
+    WSANETWORKEVENTS wsaEvents={0};
+    int client_num;
 
     if(!conn.createSocketInfo(SI, socket_tcp_accept))
         return;
     if(!conn.WSACreateEvent(readEvent))
         return;
-    if(!conn.WSAEventSelect(SI->Socket, readEvent, FD_READ))
+    if(!conn.WSAEventSelect(SI->Socket, readEvent, FD_READ | FD_CLOSE))
         return;
 
+    SI->client_address = client_address;
+    client_num = client_addresses.size();
     client_addresses.push_back(SI);
 
-    emit newClientConnected(client_addresses.size() - 1);
+    emit newClientConnected(client_num);
 
     SI->thisObj = this;
-    this->receivedCommand(1);
     while(true){
         if(!conn.WSAWaitForMultipleEvents(readEvent))
             break;
+
+        if(WSAEnumNetworkEvents(SI->Socket,readEvent,&wsaEvents) == SOCKET_ERROR)
+            break;
+
+        if(wsaEvents.lNetworkEvents & FD_CLOSE){
+            emit clientDisconnected(getClientIP(client_num));
+            client_addresses.erase(
+                        std::remove_if(
+                            client_addresses.begin(),
+                            client_addresses.end(),
+                            [SI](auto s){ return s->Socket == SI->Socket;}
+            ), client_addresses.end());
+            qDebug()<<"Disconnect";
+            break;
+        }
 
         ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
         SI->BytesSEND = 0;
@@ -428,3 +446,10 @@ bool Server::loadFile(QQueue<QByteArray>& packets, const string filename){
     file.close();
     return true;
 }
+
+char *Server::getClientIP(int client_num){
+    char *ip = inet_ntoa(client_addresses.at(client_num)->client_address.sin_addr);
+    return ip;
+}
+
+

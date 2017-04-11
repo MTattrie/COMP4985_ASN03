@@ -6,35 +6,44 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>911</width>
-    <height>458</height>
+    <width>700</width>
+    <height>468</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QPushButton" name="playBTN">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>360</y>
-      <width>71</width>
-      <height>18</height>
+      <x>230</x>
+      <y>370</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/play)</string>
+    </property>
     <property name="text">
-     <string>Play/Pause</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>460</x>
+      <x>470</x>
       <y>10</y>
       <width>201</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Available Songs</string>
@@ -43,11 +52,25 @@
    <widget class="QSlider" name="ProgressSlider">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>330</y>
-      <width>621</width>
-      <height>16</height>
+      <x>20</x>
+      <y>340</y>
+      <width>651</width>
+      <height>20</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QSlider::groove:horizontal {
+	border: #e8e9ea;
+	height: 5px;
+}
+
+QSlider::add-page:qlineargradient {
+	background: #e8e9ea;
+}
+
+QSlider::sub-page:qlineargradient {
+	background: #3D674D;
+}</string>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -56,60 +79,76 @@
    <widget class="QListView" name="listView_playlist">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>250</x>
       <y>30</y>
       <width>201</width>
-      <height>221</height>
+      <height>261</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255);
+background:transparent</string>
     </property>
    </widget>
    <widget class="QPushButton" name="rewindBTN">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>360</y>
-      <width>80</width>
-      <height>18</height>
+      <x>150</x>
+      <y>370</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/rewind)</string>
+    </property>
     <property name="text">
-     <string>Rewind</string>
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="addPlaylistBTN">
     <property name="geometry">
      <rect>
-      <x>470</x>
-      <y>220</y>
-      <width>181</width>
-      <height>20</height>
+      <x>480</x>
+      <y>250</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/addSong)</string>
+    </property>
     <property name="text">
-     <string>Add Song to Playlist</string>
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="ffBTN">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>360</y>
-      <width>80</width>
-      <height>18</height>
+      <x>310</x>
+      <y>370</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/fastforward)</string>
+    </property>
     <property name="text">
-     <string>Fast Forward</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>250</x>
       <y>10</y>
       <width>201</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Current Playlist</string>
@@ -118,21 +157,24 @@
    <widget class="QPushButton" name="downloadBTN">
     <property name="geometry">
      <rect>
-      <x>570</x>
+      <x>620</x>
       <y>250</y>
-      <width>91</width>
-      <height>21</height>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/download)</string>
+    </property>
     <property name="text">
-     <string>Download Song</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLineEdit" name="songLineEdit">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>300</y>
+      <x>130</x>
+      <y>310</y>
       <width>541</width>
       <height>20</height>
      </rect>
@@ -141,11 +183,28 @@
    <widget class="QSlider" name="volumeSlider">
     <property name="geometry">
      <rect>
-      <x>480</x>
-      <y>360</y>
+      <x>530</x>
+      <y>370</y>
       <width>121</width>
-      <height>16</height>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QSlider::groove:horizontal {
+	border: #e8e9ea;
+	height: 17px;
+}
+
+QSlider::add-page:qlineargradient {
+	background: #e8e9ea;
+}
+
+QSlider::sub-page:qlineargradient {
+	background: #3D674D;
+}</string>
+    </property>
+    <property name="value">
+     <number>99</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -154,7 +213,7 @@
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>440</x>
+      <x>450</x>
       <y>350</y>
       <width>31</width>
       <height>31</height>
@@ -173,34 +232,40 @@
    <widget class="QPushButton" name="uploadBTN">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>550</x>
       <y>250</y>
-      <width>80</width>
-      <height>21</height>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/upload)</string>
+    </property>
     <property name="text">
-     <string>Upload Song</string>
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="skipBTN">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>360</y>
-      <width>80</width>
-      <height>18</height>
+      <x>390</x>
+      <y>370</y>
+      <width>41</width>
+      <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/skipTrack)</string>
+    </property>
     <property name="text">
-     <string>Skip Track</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLCDNumber" name="TrackTime">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>300</y>
+      <x>50</x>
+      <y>310</y>
       <width>64</width>
       <height>23</height>
      </rect>
@@ -209,73 +274,98 @@
    <widget class="QListView" name="listView_availSongs">
     <property name="geometry">
      <rect>
-      <x>460</x>
+      <x>470</x>
       <y>30</y>
       <width>201</width>
-      <height>171</height>
+      <height>211</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255);
+background:transparent</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="serverPort">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>40</y>
+      <x>70</x>
+      <y>30</y>
       <width>113</width>
       <height>20</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Port Number</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="serverIP">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>113</width>
-      <height>20</height>
-     </rect>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255);
+border-color: rgb(0, 0, 0);
+background:transparent</string>
     </property>
     <property name="text">
-     <string>IP Address</string>
+     <string>Port Number...</string>
     </property>
    </widget>
    <widget class="QPushButton" name="serverStartBTN">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>70</y>
-      <width>111</width>
-      <height>18</height>
+      <x>80</x>
+      <y>60</y>
+      <width>91</width>
+      <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image:url(../assets/ui/startServer)</string>
     </property>
     <property name="text">
-     <string>Server Start</string>
+     <string/>
     </property>
    </widget>
-   <widget class="QListView" name="listView_playlist_2">
+   <widget class="QListView" name="listView_clientlist">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>110</y>
+      <x>20</x>
+      <y>120</y>
       <width>211</width>
-      <height>181</height>
+      <height>171</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255);
+background:transparent</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>90</y>
+      <x>20</x>
+      <y>100</y>
       <width>141</width>
       <height>16</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255);</string>
+    </property>
     <property name="text">
      <string>Connected Clients</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_volume">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>370</y>
+      <width>47</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../assets/ui/volume.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
@@ -284,7 +374,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>911</width>
+     <width>700</width>
      <height>21</height>
     </rect>
    </property>

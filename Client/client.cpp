@@ -58,6 +58,7 @@ void Client::storeServerDetails(QString hostname, QString port) {
         return;
     serverHostName = hostname.toLocal8Bit().constData();
     portNumber = port.toInt();
+    conn.port = portNumber;
 }
 
 

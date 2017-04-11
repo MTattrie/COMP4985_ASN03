@@ -8,6 +8,7 @@
 #include <QFile>
 
 
+
 struct Client
 {
       SOCKET_INFORMATION SocketInfo;
@@ -39,6 +40,8 @@ public:
     bool sendFile(LPSOCKET_INFORMATION &SI, string filename);
     bool loadFile(QQueue<QByteArray>& packets, const string filename);
 
+    char *getClientIP(int client_num);
+
 
     bool multicast(char *message, const int len);
 
@@ -63,12 +66,15 @@ signals:
     void update_log(QString packet);
     void receivedCommand(int command);
     void newClientConnected(int client_num);
+    void clientDisconnected(QString);
+
     void receivedAddPlaylist(QString);
 
 public slots:
 
 private:
     QQueue<QByteArray> streamQueue;
+    int port;
 
 
 };

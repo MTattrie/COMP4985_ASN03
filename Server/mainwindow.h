@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <winsock2.h>
 #include <QMainWindow>
 #include <QDir>
 #include <QStringListModel>
@@ -8,6 +9,8 @@
 #include <QAudioOutput>
 #include <QBuffer>
 #include <thread>
+#include <QtGui>
+#include <QPalette>
 #include "server.h"
 #include "audioplayer.h"
 
@@ -24,6 +27,11 @@ public:
     ~MainWindow();
 
     void findAvailableSongs();
+
+    void resizeEvent (QResizeEvent* event) {
+      m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
+      setPalette(*m_pPalette);
+    };
 signals:
     void requestSong(QString song);
 
@@ -49,20 +57,30 @@ private slots:
     void handleReceivedCommand(int command);
 
     void handleNewClient(int client_num);
+    void handleDisconnetClient(QString);
 
     void handleReceivedAddPlaylist(QString);
 
+    void setProgress(int value);
+    void setVolume(int value);
+
+
 private:
     Ui::MainWindow *ui;
+    QPixmap* m_pPixmap;
+    QPalette* m_pPalette;
 
     QStringListModel *available_song_model;
     QStringListModel *playlist_model;
+    QStringListModel *clientlist_model;
+
     QAudioOutput* audio; // class member.
     AudioPlayer *audioPlayer;
 
     Server     server;
 
     bool songFinished;
+    int audio_volume;
 
 
     void playNextSong();
