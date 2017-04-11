@@ -10,6 +10,7 @@ bool AudioPlayer::openWavFile(const QString &fileName){
     fastForwarding = false;
     if(!sourceFile.open(fileName))
         return false;
+    audio_buffer.clear();
     audio_buffer.resize(0);
     audio_pos = 0;
     progress_current = 0;
@@ -23,6 +24,7 @@ void AudioPlayer::resetPlayer(){
     paused = false;
     playing = false;
     fastForwarding = false;
+    audio_buffer.clear();
     audio_buffer.resize(0);
     audio_pos = 0;
     progress_current = 0;
@@ -138,6 +140,7 @@ bool AudioPlayer::addChunkData(const char *data, qint64 len){
 
 void AudioPlayer::setProgressData(int current, int max){
     qDebug() << "setProgressData : " << current << " ," << max;
-    progress_current = current;
-    progress_max = max;
+    progress_current = (current < 0) ? 0 : current;
+    if(max>0)
+        progress_max = max;
 }
