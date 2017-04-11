@@ -101,7 +101,9 @@ void MainWindow::on_skipBTN_clicked()
     if(audioPlayer->isPlaying()){
         //audioPlayer->pause();
         audio->stop();
+        audioPlayer->resetPlayer();
         removePlaylist();
+        //server.resetStreamData();
         playNextSong();
     }
 }
@@ -111,11 +113,16 @@ void MainWindow::on_rewindBTN_clicked()
     int samplebytes = audioPlayer->fileFormat().bytesForDuration(3000000);
     qint64 pos = audioPlayer->pos() - samplebytes;
 
-    qDebug()<< samplebytes;
+    qDebug()<< audioPlayer->mypos();
+    qDebug()<< pos;
 
     if(pos<=0)
         pos = 0;
-    audioPlayer->seek(pos);
+    audioPlayer->pause();
+    audioPlayer->myseek(pos);
+    QString progress = QString::number(pos) + "," +  QString::number(audioPlayer->audioBufferSize())  + ",";
+    server.TCPBroadCast(REWIND, QByteArray(progress.toStdString().c_str()));
+    audioPlayer->start();
 }
 
 void MainWindow::on_ffBTN_clicked()
@@ -142,6 +149,7 @@ void MainWindow::on_ffBTN_clicked()
 
 void MainWindow::on_playBTN_clicked()
 {
+    server.TCPBroadCast(PLAYPAUSE);
     if(audioPlayer->isPaused()){
         qDebug()<<"Play";
         audioPlayer->start();

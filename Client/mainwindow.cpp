@@ -56,20 +56,23 @@ void MainWindow::on_button_addSong_clicked()
 
 void MainWindow::on_button_play_clicked()
 {
+    qDebug()<<"on_button_play_clicked";
     client.reqeustCommand(PLAYPAUSE);
-    audio->suspend();
-    audioPlayer->pause();
+    //audio->suspend();
+    //audioPlayer->pause();
 }
 
 void MainWindow::on_button_skip_clicked()
 {
-    client.reqeustCommand(SKIPTRACK);
-    isSetHeader = false;
-    audio->stop();
-    audioPlayer->pause();
-    audio->reset();
-    audioPlayer->resetPlayer();
-    playlist_model->removeRow(0);
+    if(audioPlayer->isPlaying()){
+        client.reqeustCommand(SKIPTRACK);
+        isSetHeader = false;
+        audio->stop();
+        audioPlayer->pause();
+        audio->reset();
+        audioPlayer->resetPlayer();
+        playlist_model->removeRow(0);
+    }
 }
 
 
@@ -138,10 +141,12 @@ void MainWindow::addChunk(char *data, qint64 len){
             && audioPlayer->bytesAvailable() >= audioPlayer->fileFormat().bytesForDuration(1000000)){
         audioPlayer->start();
         audio->start(audioPlayer);
+        ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
     }else if(audioPlayer->isPaused()
              && audioPlayer->bytesAvailable() >= audioPlayer->fileFormat().bytesForDuration(1000000)){
         audioPlayer->start();
         audio->resume();
+        ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
     }
 
 }
@@ -169,6 +174,7 @@ void MainWindow::updateProgressData(char *progressData){
     qDebug()<<stringList;
     audioPlayer->setProgressData(stringList.at(0).toInt(), stringList.at(1).toInt());
 }
+
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: decodeMessage
@@ -242,6 +248,32 @@ void MainWindow::fastforward(){
     audio->start(audioPlayer);
 }
 
+void MainWindow::receivedSkipTrack(){
+    qDebug()<<"receivedSkipTrack";
+    audio->stop();
+    audioPlayer->pause();
+    audio->reset();
+    audioPlayer->resetPlayer();
+}
+
+void MainWindow::rewind(){
+    audio->stop();
+    audioPlayer->pause();
+    audioPlayer->resetPlayer();
+}
+
+void MainWindow::playpause(){
+    if(audioPlayer->isPlaying()){
+        audio->suspend();
+        audioPlayer->pause();
+        ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/play);}"));
+    }else if(audioPlayer->isPaused()){
+        audio->resume();
+        audioPlayer->start();
+        ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
+    }
+}
+
 void MainWindow::handleReceivedCommand(int command, char *data, int len){
     switch(command){
         case UPLOAD:
@@ -252,14 +284,17 @@ void MainWindow::handleReceivedCommand(int command, char *data, int len){
             addPlaylist(QString(data));
             break;
         case PLAYPAUSE:
+            playpause();
             break;
         case FASTFORWORD:
             fastforward();
             break;
         case REWIND:
+            rewind();
+            updateProgressData(data);
             break;
         case SKIPTRACK:
-            //receivedSkipTrack();
+            receivedSkipTrack();
             break;
         case STREAM:
             addChunk(data, len);

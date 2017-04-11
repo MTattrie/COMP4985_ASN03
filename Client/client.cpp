@@ -190,11 +190,11 @@ void Client::requestSong(QString song){
 
 void Client::reqeustCommand(int command, QString data){
     char buffer[BUFFERSIZE];
-
+    qDebug()<<"reqeustCommand";
     QString packet(command);
     packet.append(data);
     memset((char *)buffer, 0, BUFFERSIZE);
-    memcpy(buffer, packet.toStdString().c_str(), BUFFERSIZE);
+    memcpy(buffer, packet.toStdString().c_str(), packet.size());
 
     if(!conn.send(socket_tcp, buffer))
         return;

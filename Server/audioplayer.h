@@ -15,8 +15,8 @@ public:
     bool openWavFile(const QString &fileName);
     const QAudioFormat &fileFormat() const;
     qint64 headerLength() const;
-    qint64 pos() const;
-    bool seek(qint64 pos);
+    qint64 mypos() const;
+    bool myseek(qint64 pos);
     bool pause();
     bool start();
     QAudioFormat &fastForward();

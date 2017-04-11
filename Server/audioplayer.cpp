@@ -79,14 +79,14 @@ qint64 AudioPlayer::bytesAvailable() const{
     return audio_buffer.size() - audio_pos;
 }
 
-qint64 AudioPlayer::pos() const{
+qint64 AudioPlayer::mypos() const{
     return audio_pos;
 }
 
-bool AudioPlayer::seek(qint64 pos){
+bool AudioPlayer::myseek(qint64 pos){
     if(pos < 0 || pos > audio_buffer.size())
         return false;
-
+    qDebug()<<"seek";
     audio_pos = pos;
     return true;
 }

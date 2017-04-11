@@ -320,6 +320,10 @@ void Server::addStreamData(QByteArray data){
     streamQueue.push_back(data);
 }
 
+void Server::resetStreamData(){
+    streamQueue.clear();
+}
+
 void Server::sendToClient(int client_num, int command, QByteArray data){
     LPSOCKET_INFORMATION SI = client_addresses.at(client_num);
     data.prepend(command);
