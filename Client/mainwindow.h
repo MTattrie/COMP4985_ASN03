@@ -34,10 +34,11 @@ public:
     void resizeEvent (QResizeEvent* event) {
       m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
       setPalette(*m_pPalette);
-    };
+    }
 
 signals:
     void requestSong(QString song);
+    void sendSong(QString song);
 
 private slots:
 
@@ -58,6 +59,8 @@ private slots:
     void setVolume(int value);
     void setProgress(int value);
     void connectToServer();
+
+    void on_button_upload_clicked();
 
 private:
     Ui::MainWindow *ui;

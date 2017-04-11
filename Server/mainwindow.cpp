@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -62,6 +63,7 @@ void MainWindow::initAudioOuput(){
     connect(&server, SIGNAL(clientDisconnected(QString)), this, SLOT(handleDisconnetClient(QString)));
     connect(&server, SIGNAL( receivedAddPlaylist(QString)), this, SLOT(handleReceivedAddPlaylist(QString)));
     connect(audioPlayer, SIGNAL( progressAudio(int)), this, SLOT(setProgress(int)));
+    connect(&server, SIGNAL(updateAvaliableSongs()), this, SLOT(updateAvaliableSongs()));
 
 
 }
@@ -327,3 +329,29 @@ void MainWindow::setVolume(int value)
 void MainWindow::setProgress(int value){
     ui->ProgressSlider->setValue(value);
 }
+
+void MainWindow::on_uploadBTN_clicked()
+{
+    QString filePath = QFileDialog::getOpenFileName(this ,
+                                                    QObject::tr("wav files"),
+                                                    "C:/",
+                                                    "wav(*.wav)");
+    QFileInfo fi(filePath);
+    QString fileName= fi.fileName();
+    QString destinationPath= "C:\\Users\\Administrator\\Desktop\\COMP4985_ASN03\\assets\\musics\\"+fileName;
+    if(QFile::copy(filePath, destinationPath))
+        qDebug() << "success";
+    else
+        qDebug() << "failed";
+}
+
+void MainWindow::updateAvaliableSongs(){
+    findAvailableSongs();
+    QString availableSongs;
+    foreach(QString item, available_song_model->stringList()){
+        availableSongs += item + "/";
+    }
+    server.TCPBroadCast(AVAILSONG, QByteArray(availableSongs.toStdString().c_str()));
+}
+
+

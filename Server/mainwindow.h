@@ -31,7 +31,7 @@ public:
     void resizeEvent (QResizeEvent* event) {
       m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
       setPalette(*m_pPalette);
-    };
+    }
 signals:
     void requestSong(QString song);
 
@@ -64,6 +64,10 @@ private slots:
     void setProgress(int value);
     void setVolume(int value);
 
+
+    void on_uploadBTN_clicked();
+
+    void updateAvaliableSongs();
 
 private:
     Ui::MainWindow *ui;

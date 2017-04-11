@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <ostream>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -18,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listView_playlist->setModel(playlist_model);
 
     QObject::connect(this, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
+    QObject::connect(this, SIGNAL( sendSong(QString) ), &client, SLOT( sendSong(QString) ));
     QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
 
 
@@ -340,6 +342,13 @@ void MainWindow::writeFile(){
     }
 
     client.filenames.clear();
-    client.filenames.clear();
+    client.downloads.clear();
     client.isDonwloading=false;
+}
+
+void MainWindow::on_button_upload_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open Wav"), "", tr("Audio Files (*.wav)"));
+    emit sendSong(fileName);
 }

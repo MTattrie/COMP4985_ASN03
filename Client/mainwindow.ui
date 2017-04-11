@@ -267,7 +267,7 @@ background:transparent</string>
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_8">
+   <widget class="QPushButton" name="button_upload">
     <property name="geometry">
      <rect>
       <x>510</x>

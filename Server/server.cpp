@@ -10,6 +10,7 @@
 #include <string>
 #include <fstream>
 #include <queue>
+#include <QFileDialog>
 
 #include <ws2tcpip.h>
 
@@ -113,6 +114,10 @@ void Server::readThread(){
     client_num = client_addresses.size();
     client_addresses.push_back(SI);
 
+    QByteArray upload;
+    SI->upload = &upload;
+
+
     emit newClientConnected(client_num);
 
     SI->thisObj = this;
@@ -180,8 +185,16 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
         qDebug() << "Server::WorkerRoutine_RecvCommand receved command :  " <<command;
 
         switch(command){
-        case UPLOAD: // upload song
+        case UPLOAD: { // upload song
+            SI->upload->append(QByteArray(&SI->Buffer[1], BytesTransferred-1));
             return;
+        }
+        case COMPLETE: {// upload song
+            ((Server *)(SI->thisObj))->saveFile(*(SI->upload), &(SI->Buffer[1]));
+            SI->upload->clear();
+            emit  ((Server *)(SI->thisObj))->updateAvaliableSongs();
+            return;
+        }
         case DOWNLOAD: { //download song
             string filename(&(SI->Buffer[1]));
             ((Server *)(SI->thisObj))->sendFile(SI, filename);
@@ -207,6 +220,15 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
 
 }
 
+void Server::saveFile(QByteArray data, QString filename){
+    QString path("../assets/musics/");
+    path.append(filename);
+    qDebug() << "saved file: " << path;
+    QFile file(path);
+    file.open(QIODevice::WriteOnly);
+    file.write(data);
+    file.close();
+}
 
 void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
         LPWSAOVERLAPPED Overlapped, DWORD InFlags) {
@@ -347,7 +369,6 @@ void Server::resetStreamData(){
 void Server::sendToClient(int client_num, int command, QByteArray data){
     LPSOCKET_INFORMATION SI = client_addresses.at(client_num);
     data.prepend(command);
-
 
     ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
     memset(SI->Buffer, 0, sizeof(SI->Buffer));

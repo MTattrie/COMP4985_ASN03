@@ -7,7 +7,7 @@
 
 using std::string;
 
-#define UPLOAD      0
+#define UPLOAD      13
 #define DOWNLOAD    1
 #define ADDLIST     2
 #define PLAYPAUSE   3
