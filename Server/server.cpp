@@ -182,9 +182,11 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
         switch(command){
         case UPLOAD: // upload song
             return;
-        case DOWNLOAD: //download song
-            //conn.WSASend(SI, WorkerRoutine_SendList);
+        case DOWNLOAD: { //download song
+            string filename(&(SI->Buffer[1]));
+            ((Server *)(SI->thisObj))->sendFile(SI, filename);
             return;
+        }
         case ADDLIST: //add list
             emit ((Server *)(SI->thisObj))->receivedAddPlaylist(QString(&SI->Buffer[1]));
             return;
@@ -330,7 +332,7 @@ void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
 
    if (SI->BytesSEND < SI->BytesToSend)
    {
-       conn.WSASendTo(SI, WorkerRoutine_TCPSend);
+       conn.WSASend(SI, WorkerRoutine_TCPSend);
    }
 }
 
@@ -355,7 +357,7 @@ void Server::sendToClient(int client_num, int command, QByteArray data){
     SI->BytesToSend = BUFFERSIZE;
     SI->BytesSEND = 0;
 
-    conn.WSASend(SI, WorkerRoutine_UDPSend);
+    conn.WSASend(SI, WorkerRoutine_TCPSend);
 }
 
 void Server::TCPBroadCast(int command, QByteArray data){
@@ -373,8 +375,81 @@ void Server::TCPBroadCast(int command, QByteArray data){
    }
 }
 
+bool Server::sendFile(LPSOCKET_INFORMATION &SI, string filename){
+    QQueue<QByteArray> packets;
+    if(!loadFile(packets, filename))
+        return false;
+
+    ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+    SI->Overlapped.hEvent = WSACreateEvent();
+    if(SI->Overlapped.hEvent == NULL){
+        return false;
+    }
+    DWORD Flags;
+    while(!packets.empty()){
+        QByteArray packet = packets.front();
+        packets.pop_front();
+
+        memset(SI->Buffer, 0, BUFFERSIZE);
+        memcpy(SI->Buffer, packet.data(), packet.size());
+        SI->DataBuf.buf = SI->Buffer;
+        SI->DataBuf.len = BUFFERSIZE;
+        SI->BytesToSend = BUFFERSIZE;
+        SI->BytesSEND = 0;
+
+        if (WSASend(SI->Socket, &(SI->DataBuf), 1, &SI->BytesSEND, 0,
+                &(SI->Overlapped), NULL) == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != WSA_IO_PENDING)
+            {
+                qDebug() << "Connection::WSASend() failed with error" << WSAGetLastError();
+                return false;
+            }
+            if(WSAWaitForMultipleEvents(1, &SI->Overlapped.hEvent, FALSE, INFINITE, FALSE) == WAIT_TIMEOUT){
+                qDebug() << "Connection::WSASend() failed with timeout";
+            }
+            qDebug() << "Connection::WSASend() WSA_IO_PENDING";
+        }
+        if(!WSAGetOverlappedResult(SI->Socket, &(SI->Overlapped), &SI->BytesSEND, FALSE, &Flags)){
+            qDebug()<<"WSASend failed with error: " << WSAGetLastError();
+        }
+    }
+
+    qDebug() << "Server::sendFile() Completed transfer: " << filename.c_str();
+    return true;
+}
+
+bool Server::loadFile(QQueue<QByteArray>& packets, const string filename){
+    QString path("../assets/musics/");
+    path.append(filename.c_str());
+    const QString p(path);
+    QFile file(p);
+    if(!file.open(QIODevice::ReadOnly))
+        return false;
+
+    QByteArray data = file.readAll();
+
+    qint64 pos = 0;
+    qint64 len =  BUFFERSIZE - 1;
+
+    while(pos < data.size()) {
+        QByteArray packet;
+        qint64 chunk = qMin((data.size() - pos), len);
+        packet.append(DOWNLOAD);
+        packet.append(data.mid(pos, chunk));
+        packets.push_back(packet);
+        pos += chunk;
+    }
+    QByteArray packet;
+    packet.append(COMPLETE);
+    packets.push_back(packet);
+    file.close();
+    return true;
+}
+
 char *Server::getClientIP(int client_num){
     char *ip = inet_ntoa(client_addresses.at(client_num)->client_address.sin_addr);
     return ip;
 }
+
 

@@ -85,6 +85,9 @@ private:
     void updateProgressData(char *);
     void addPlaylist(QString item);
     void fastforward();
+
+    void writeFile();
+
     void receivedSkipTrack();
     void rewind();
     void playpause();

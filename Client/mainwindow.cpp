@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <fstream>
+#include <ostream>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -29,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
     connect(ui->button_connectToServer,SIGNAL(pressed()),this,SLOT(connectToServer()));
+
 
     ui->lineEdit_serverHostname->setText("localhost");
     ui->lineEdit_serverPortNumber->setText("7000");
@@ -278,13 +282,19 @@ void MainWindow::playpause(){
         ui->button_play->setStyleSheet(QString("QPushButton {border-image:url(../assets/ui/pause);}"));
     }
 }
-
+int count = 0;
 void MainWindow::handleReceivedCommand(int command, char *data, int len){
     switch(command){
         case UPLOAD:
             break;
-        case DOWNLOAD:
+        case DOWNLOAD:{
+            client.downloads.append(QByteArray(data, len));
             break;
+        }
+        case COMPLETE:{
+            std::thread(&MainWindow::writeFile, this).detach();
+            break;
+        }
         case ADDLIST:
             addPlaylist(QString(data));
             break;
@@ -318,4 +328,18 @@ void MainWindow::handleReceivedCommand(int command, char *data, int len){
             break;
     }
     delete data;
+}
+
+
+void MainWindow::writeFile(){
+    const QString filename(client.filenames);
+    QFile file(filename);
+    if(file.open(QIODevice::WriteOnly)){
+        file.write(client.downloads, client.downloads.size());
+        file.close();
+    }
+
+    client.filenames.clear();
+    client.filenames.clear();
+    client.isDonwloading=false;
 }
