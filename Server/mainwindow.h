@@ -50,6 +50,8 @@ private slots:
 
     void handleNewClient(int client_num);
 
+    void handleReceivedAddPlaylist(QString);
+
 private:
     Ui::MainWindow *ui;
 
@@ -68,6 +70,7 @@ private:
     bool setAudioHeader(QAudioFormat format);
     void sendHeader();
     void removePlaylist();
+    void addPlaylist(QString &item);
 };
 
 #endif // MAINWINDOW_H

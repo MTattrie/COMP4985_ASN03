@@ -109,28 +109,11 @@ void Client::runTCP(){
 
         qDebug()<<"command : " << command;
 
-        switch(command){
-            case HEADER:
-                char header[BUFFERSIZE - 1];
-                memcpy(header, &rbuf[1], BUFFERSIZE-1);
-                emit receivedHeader(header, BUFFERSIZE-1);
-                break;
-            case AVAILSONG:
-                char availSongs[BUFFERSIZE - 1];
-                memcpy(availSongs, &rbuf[1], BUFFERSIZE-1);
-                emit receivedAvailSongs(availSongs);
-                break;
-            case PLAYLIST:
-                char playlist[BUFFERSIZE - 1];
-                memcpy(playlist, &rbuf[1], BUFFERSIZE-1);
-                emit receivedPlaylist(playlist);
-                break;
-            case PROGRESS:
-                char progressData[BUFFERSIZE - 1];
-                memcpy(progressData, &rbuf[1], BUFFERSIZE-1);
-                emit receivedProgressData(progressData);
-                break;
-        }
+
+        char *data = new char[BUFFERSIZE-1];
+        memcpy(data, &rbuf[1], BUFFERSIZE-1);
+        emit receivedCommand(command, data, BUFFERSIZE-1);
+
     }
 }
 
@@ -159,19 +142,10 @@ void Client::runUDP(){
             continue;
         int command = rbuf[0] - '0';
 
-        switch(command){
-            case HEADER:
-                emit receivedHeader(&rbuf[1], n-1);
-                break;
-            case STREAM:
-                emit receivedChunkData(&rbuf[1], n-1);
-                break;
-            case PROGRESS:
-                char progressData[BUFFERSIZE - 1];
-                memcpy(progressData, &rbuf[1], n-1);
-                emit receivedProgressData(progressData);
-                break;
-        }
+        char *data = new char[n-1];
+        memcpy(data, &rbuf[1], n-1);
+        emit receivedCommand(command, data, n-1);
+
     }
 }
 
@@ -190,18 +164,17 @@ void Client::requestSong(QString song){
         return;
 }
 
-void Client::reqeustCommand(int command){
+void Client::reqeustCommand(int command, QString data){
     char buffer[BUFFERSIZE];
 
     QString packet(command);
-
+    packet.append(data);
     memset((char *)buffer, 0, BUFFERSIZE);
     memcpy(buffer, packet.toStdString().c_str(), BUFFERSIZE);
 
     if(!conn.send(socket_tcp, buffer))
         return;
 }
-
 
 
 

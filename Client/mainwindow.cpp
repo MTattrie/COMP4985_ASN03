@@ -15,11 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listView_playlist->setModel(playlist_model);
 
     QObject::connect(this, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
-    QObject::connect(&client, SIGNAL( receivedHeader(char*, qint64)), this, SLOT(handleReceivedHeader(char*,qint64)));
-    QObject::connect(&client, SIGNAL( receivedChunkData(char*,qint64)), this, SLOT(handleReceivedChunk(char*,qint64)));
-    QObject::connect(&client, SIGNAL( receivedAvailSongs(char*)), this, SLOT(handleReceivedAvailSongs(char*)));
-    QObject::connect(&client, SIGNAL( receivedPlaylist(char*)), this, SLOT(handleReceivedPlaylist(char*)));
-    QObject::connect(&client, SIGNAL( receivedProgressData(char*)), this, SLOT(handleReceivedProgressData(char*)));
+    QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
 
 
     std::thread(&Client::start, &client).detach();
@@ -51,7 +47,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_button_addSong_clicked()
 {
+    QModelIndex index = ui->listView_availSongs->currentIndex();
+    if(index.row() < 0)
+        return;
 
+    QString itemText = index.data(Qt::DisplayRole).toString();
+    client.reqeustCommand(ADDLIST, itemText);
 }
 
 void MainWindow::on_button_play_clicked()
@@ -114,14 +115,14 @@ void MainWindow::on_button_download_clicked()
     emit requestSong(itemText);
 }
 
-void MainWindow::handleReceivedHeader(char *data, qint64 len)
+void MainWindow::updateHeader(char *data, qint64 len)
 {
     if(audioPlayer->readHeader(data, len)){
         if(!setAudioHeader(audioPlayer->fileFormat()))
             return;
         audioPlayer->resetPlayer();
         if(isSetHeader){
-            playlist_model->removeRow(0);
+           // playlist_model->removeRow(0);
         }
         isSetHeader = true;
         qDebug()<<"size : " << data;
@@ -130,7 +131,7 @@ void MainWindow::handleReceivedHeader(char *data, qint64 len)
         isSetHeader = false;
     }
 }
-void MainWindow::handleReceivedChunk(char *data, qint64 len){
+void MainWindow::addChunk(char *data, qint64 len){
     audioPlayer->addChunkData(data, len);
 
     if(!audioPlayer->isPlaying()
@@ -146,18 +147,25 @@ void MainWindow::handleReceivedChunk(char *data, qint64 len){
 
 }
 
-void MainWindow::handleReceivedAvailSongs(char *list){
+void MainWindow::updateAvailSongs(char *list){
     QStringList stringList = QString(list).split('/');
     stringList.removeLast();
     available_song_model->setStringList(stringList);
 }
-void MainWindow::handleReceivedPlaylist(char *list){
+
+void MainWindow::updatePlaylist(char *list){
     QStringList stringList = QString(list).split('/');
     stringList.removeLast();
     playlist_model->setStringList(stringList);
 }
 
-void MainWindow::handleReceivedProgressData(char *progressData){
+void MainWindow::addPlaylist(QString item){
+    playlist_model->insertRow(playlist_model->rowCount());
+    QModelIndex row = playlist_model->index(playlist_model->rowCount()-1);
+    playlist_model->setData(row, item);
+}
+
+void MainWindow::updateProgressData(char *progressData){
     QStringList stringList = QString(progressData).split(',');
     qDebug()<<stringList;
     audioPlayer->setProgressData(stringList.at(0).toInt(), stringList.at(1).toInt());
@@ -209,6 +217,60 @@ void MainWindow::setVolume(int value)
 }
 
 void MainWindow::setProgress(int value){
-    qDebug()<<"value : " << value;
     ui->ProgressSlider->setValue(value);
+}
+
+void MainWindow::fastforward(){
+    if(!audioPlayer->isPlaying())
+        return;
+
+    QAudioFormat format = audioPlayer->fileFormat();
+    if(audioPlayer->isFastForwarding()){
+        audioPlayer->isFastForwarding(false);
+    }else {
+        format.setSampleRate(format.sampleRate() * 1.5);
+        audioPlayer->isFastForwarding(true);
+    }
+
+    delete audio;
+    audio = new QAudioOutput(format, this);
+    audio->start(audioPlayer);
+}
+
+void MainWindow::handleReceivedCommand(int command, char *data, int len){
+    switch(command){
+        case UPLOAD:
+            break;
+        case DOWNLOAD:
+            break;
+        case ADDLIST:
+            addPlaylist(QString(data));
+            break;
+        case PLAYPAUSE:
+            break;
+        case FASTFORWORD:
+            fastforward();
+            break;
+        case REWIND:
+            break;
+        case SKIPTRACK:
+            //receivedSkipTrack();
+            break;
+        case STREAM:
+            addChunk(data, len);
+            break;
+        case HEADER:
+            updateHeader(data, len);
+            break;
+        case PROGRESS:
+            updateProgressData(data);
+            break;
+        case AVAILSONG:
+            updateAvailSongs(data);
+            break;
+        case PLAYLIST:
+            updatePlaylist(data);
+            break;
+    }
+    delete data;
 }

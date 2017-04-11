@@ -47,6 +47,7 @@ void MainWindow::initAudioOuput(){
     connect(audioPlayer, SIGNAL(streamChunkAudio(qint64,qint64)), this, SLOT(handleChunkStream(qint64,qint64)));
     connect(&server, SIGNAL(receivedCommand(int)), this, SLOT(handleReceivedCommand(int)));
     connect(&server, SIGNAL(newClientConnected(int)), this, SLOT(handleNewClient(int)));
+    connect(&server, SIGNAL( receivedAddPlaylist(QString)), this, SLOT(handleReceivedAddPlaylist(QString)));
 
 }
 
@@ -120,7 +121,7 @@ void MainWindow::on_ffBTN_clicked()
     if(audioPlayer->isFastForwarding()){
         audioPlayer->isFastForwarding(false);
     }else {
-        format.setSampleRate(format.sampleRate() * 2);
+        format.setSampleRate(format.sampleRate() * 1.5);
         audioPlayer->isFastForwarding(true);
     }
 
@@ -130,6 +131,7 @@ void MainWindow::on_ffBTN_clicked()
     audio->start(audioPlayer);
     audio->setVolume(0);
 
+    server.TCPBroadCast(FASTFORWORD);
 }
 
 void MainWindow::on_playBTN_clicked()
@@ -214,16 +216,16 @@ void MainWindow::on_serverStartBTN_clicked()
 void MainWindow::handleReceivedCommand(int command)
 {
     switch(command){
-    case 3: //play or pause
+    case PLAYPAUSE: //play or pause
         on_playBTN_clicked();
         return;
-    case 4: // fastforward
-        //on_ffBTN_clicked(); //Need to broadcast to all clients
+    case FASTFORWORD: // fastforward
+        on_ffBTN_clicked(); //Need to broadcast to all clients
         return;
-    case 5: // rewind
+    case REWIND: // rewind
         on_rewindBTN_clicked();
         return;
-    case 6: // skip track
+    case SKIPTRACK: // skip track
         on_skipBTN_clicked();
         return;
     }
@@ -251,20 +253,23 @@ void MainWindow::handleNewClient(int client_num)
 
     server.sendToClient(client_num, AVAILSONG, QByteArray(availableSongs.toStdString().c_str()));
     server.sendToClient(client_num, PLAYLIST, QByteArray(playList.toStdString().c_str()));
-
 }
+void MainWindow::handleReceivedAddPlaylist(QString item){
+    addPlaylist(item);
+}
+
 void MainWindow::removePlaylist(){
     playlist_model->removeRow(0);
     QString playList;
     foreach(QString item, playlist_model->stringList()){
         playList += item + "/";
     }
-    server.broadcast(PLAYLIST, QByteArray(playList.toStdString().c_str()));
+    server.TCPBroadCast(PLAYLIST, QByteArray(playList.toStdString().c_str()));
 }
 
-void MainWindow::addPlayList(QString item){
+void MainWindow::addPlaylist(QString &item){
     playlist_model->insertRow(playlist_model->rowCount());
     QModelIndex row = playlist_model->index(playlist_model->rowCount()-1);
     playlist_model->setData(row, item);
-    server.broadcast(ADDLIST, QByteArray(item.toStdString().c_str()));
+    server.TCPBroadCast(ADDLIST, QByteArray(item.toStdString().c_str()));
 }

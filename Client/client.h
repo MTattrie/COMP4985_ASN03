@@ -22,13 +22,15 @@ public:
     void startUDP();
     void connectUDP();
     void runUDP();
-    void reqeustCommand(int command);
+    void reqeustCommand(int command, QString data = "");
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
     void receivedAvailSongs(char *);
     void receivedPlaylist(char *);
     void receivedProgressData(char *);
+    void receivedAddPlaylist(QString);
+    void receivedCommand(int, char*, int);
 
 public slots:
     void requestSong(QString song);
