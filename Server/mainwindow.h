@@ -8,6 +8,8 @@
 #include <QAudioOutput>
 #include <QBuffer>
 #include <thread>
+#include <QtGui>
+#include <QPalette>
 #include "server.h"
 #include "audioplayer.h"
 
@@ -54,6 +56,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QPixmap* m_pPixmap;
+    QPalette* m_pPalette;
 
     QStringListModel *available_song_model;
     QStringListModel *playlist_model;

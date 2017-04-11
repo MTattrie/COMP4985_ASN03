@@ -8,6 +8,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     setWindowTitle("Server - ComAudio");
 
+    m_pPalette	= new QPalette();
+    m_pPixmap = new QPixmap("../assets/ui/background.jpg");
+
+    m_pPalette->setBrush(QPalette::Background,*(new QBrush(*(m_pPixmap))));
+    setPalette(*m_pPalette);
+
     // Create model
     available_song_model = new QStringListModel(this);
     playlist_model = new QStringListModel(this);
@@ -202,7 +208,7 @@ void MainWindow::sendHeader(){
 
 void MainWindow::on_serverStartBTN_clicked()
 {
-    QString ipAddr = ui->serverIP->text();
+    //QString ipAddr = ui->serverIP->text();
     QString port = ui->serverPort->text();
 
     if(port.length() < 1)
