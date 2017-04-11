@@ -30,7 +30,7 @@ public:
     bool readHeader(const char *data, qint64 len);
     void resetPlayer();
     qint64 bytesAvailable() const;
-    void setProgressData(int current, int max);
+    void setProgressData(int current, int max = 0);
 
 private:
     qint64     audio_pos;

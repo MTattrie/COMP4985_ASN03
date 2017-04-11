@@ -93,6 +93,10 @@ private:
 
     void fastforward();
 
+    void receivedSkipTrack();
+    void rewind();
+    void playpause();
+
 };
 
 #endif // MAINWINDOW_H

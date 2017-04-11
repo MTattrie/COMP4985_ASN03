@@ -26,6 +26,7 @@ public:
     void connectTCP();
     void runTCP();
     void addStreamData(QByteArray data);
+    void resetStreamData();
     void acceptThread(WSAEVENT event);
     void readThread();
 
