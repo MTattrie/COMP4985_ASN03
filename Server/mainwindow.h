@@ -26,6 +26,11 @@ public:
     ~MainWindow();
 
     void findAvailableSongs();
+
+    void resizeEvent (QResizeEvent* event) {
+      m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
+      setPalette(*m_pPalette);
+    };
 signals:
     void requestSong(QString song);
 

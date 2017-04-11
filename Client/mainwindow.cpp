@@ -31,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->button_connectToServer,SIGNAL(pressed()),this,SLOT(connectToServer()));
 
     ui->ProgressSlider->setValue(0); //probably remove this line
-//    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
 }
 
 
