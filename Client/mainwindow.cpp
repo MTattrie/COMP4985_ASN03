@@ -18,8 +18,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
 
 
-    std::thread(&Client::start, &client).detach();
-
     initAudioOuput();
 
     m_pPalette	= new QPalette();
@@ -30,8 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setPalette(*palette);
 
     connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
+    connect(ui->button_connectToServer,SIGNAL(pressed()),this,SLOT(connectToServer()));
 
-    ui->ProgressSlider->setValue(40);
+    ui->ProgressSlider->setValue(0); //probably remove this line
 //    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
 }
 
@@ -174,6 +173,52 @@ void MainWindow::updateProgressData(char *progressData){
     QStringList stringList = QString(progressData).split(',');
     qDebug()<<stringList;
     audioPlayer->setProgressData(stringList.at(0).toInt(), stringList.at(1).toInt());
+}
+
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: decodeMessage
+--
+-- DATE: April 7, 2017
+--
+-- DESIGNER:
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: void MainWindow::decodeMessage(QString message)
+--                  QString message: Text data recevied from the server
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Called when received a message from the server.
+--  Reads the first character of the received message and handle the message by the code.
+----------------------------------------------------------------------------------------------------------------------*/
+void MainWindow::decodeMessage(QString message) {
+    qDebug() << "decodeMessage : " << message;
+
+
+    if(!message.at(0).isNumber())
+        return;
+    switch(message.at(0).digitValue()){
+    case 1: // Dong to Download
+
+        break;
+    case 2: // Update Playlist
+
+        break;
+    case 3: // Update Available Songs
+
+        break;
+    default:
+        break;
+    }
+}
+
+void MainWindow::connectToServer() {
+    QString hostname = ui->lineEdit_serverHostname->text();
+    QString portNumber = ui->lineEdit_serverPortNumber->text();
+    std::thread(&Client::start, &client, hostname, portNumber).detach();
 }
 
 
