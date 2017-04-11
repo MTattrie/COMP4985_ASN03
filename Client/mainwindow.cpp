@@ -17,7 +17,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(this, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
     QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
 
-
     initAudioOuput();
 
     m_pPalette	= new QPalette();
@@ -29,8 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
     connect(ui->button_connectToServer,SIGNAL(pressed()),this,SLOT(connectToServer()));
+    connect(ui->peerConnectBTN, SIGNAL(pressed()), this,SLOT(connectToPeer()));
 
     ui->ProgressSlider->setValue(0); //probably remove this line
+//    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
 }
 
 
@@ -312,4 +313,18 @@ void MainWindow::handleReceivedCommand(int command, char *data, int len){
             break;
     }
     delete data;
+}
+
+QString MainWindow::getPeerIP(){
+    return this->ui->peerIP_LineEdit->text();
+}
+
+QString MainWindow::getPeerPort(){
+    return this->ui->peerPort_LineEdit->text();
+}
+
+void MainWindow::connectToPeer(){
+    QString peerIP = getPeerIP();
+    QString peerPort = getPeerPort();
+    std::thread(&Client::start, &client, peerIP, peerPort).detach();
 }

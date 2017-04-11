@@ -10,6 +10,7 @@
 using std::string;
 
 #define SERVER_TCP_PORT 7000
+#define UDP_PORT
 #define DATA_BUFSIZE 8192
 
 #define MODE_SEND    0

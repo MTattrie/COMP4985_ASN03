@@ -403,7 +403,7 @@ background:transparent
      <string>Peer to Peer - Microphone</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit_4">
+   <widget class="QLineEdit" name="peerIP_LineEdit">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -419,7 +419,7 @@ background:transparent
      <string>Client IP Address</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit_5">
+   <widget class="QLineEdit" name="peerPort_LineEdit">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -433,6 +433,32 @@ background:transparent
     </property>
     <property name="text">
      <string>Client Port Number</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="peerConnectBTN">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>220</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>peer connect</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="recordBTN">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>250</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>record</string>
     </property>
    </widget>
   </widget>

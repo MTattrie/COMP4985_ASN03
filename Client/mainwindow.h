@@ -36,8 +36,18 @@ public:
       setPalette(*m_pPalette);
     };
 
+    QString getPeerIP();
+    QString getPeerPort();
+
+public slots:
+    void confirmPeerConnect();
+
 signals:
     void requestSong(QString song);
+    void requestPeerConnection();
+
+
+
 
 private slots:
 
@@ -58,6 +68,7 @@ private slots:
     void setVolume(int value);
     void setProgress(int value);
     void connectToServer();
+    void connectToPeer();
 
 private:
     Ui::MainWindow *ui;
@@ -84,7 +95,6 @@ private:
     void updateAvailSongs(char *);
 
     void updatePlaylist(char *);
-
 
     void updateProgressData(char *);
 

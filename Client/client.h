@@ -14,6 +14,7 @@ public:
     explicit Client(QObject *parent = 0);
 
     void start(QString hostname, QString port);
+    void startPeer(QString hostname, QString port);
 
     void startTCP();
     void connectTCP();
@@ -24,6 +25,10 @@ public:
     void runUDP();
     void reqeustCommand(int command, QString data = "");
     void storeServerDetails(QString hostname, QString port);
+    //mic
+    void startPeerUDP();
+    void connectPeerUDP();
+    void runPeerUDP();
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
@@ -35,6 +40,8 @@ signals:
 
 public slots:
     void requestSong(QString song);
+    void requestPeerConnect(int command, QString data);
+
 
 private:
     std::string serverHostName;

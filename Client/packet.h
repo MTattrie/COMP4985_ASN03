@@ -19,6 +19,7 @@ using std::string;
 #define PROGRESS    9
 #define AVAILSONG     10
 #define PLAYLIST      11
+//#define MICROPHONE    12 for tcp
 
 #define BUFFERSIZE 20000
 
