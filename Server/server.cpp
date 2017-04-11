@@ -49,8 +49,6 @@ bool Server::setPort(QString _port) {
 }
 
 
-
-
 void Server::startTCP() {
     if(!conn.WSAStartup())
         return;
@@ -164,20 +162,21 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
         qDebug() << "Server::WorkerRoutine_RecvCommand receved command :  " <<command;
 
         switch(command){
-        case 0: // upload song
+        case UPLOAD: // upload song
             return;
-        case 1: //download song
+        case DOWNLOAD: //download song
             //conn.WSASend(SI, WorkerRoutine_SendList);
             return;
-        case 2: //add list
+        case ADDLIST: //add list
+            emit ((Server *)(SI->thisObj))->receivedAddPlaylist(QString(&SI->Buffer[1]));
             return;
-        case 3: //play or pause
-        case 4: // fastforward
-        case 5: // rewind
-        case 6: // skip track
+        case PLAYPAUSE: //play or pause
+        case FASTFORWORD: // fastforward
+        case REWIND: // rewind
+        case SKIPTRACK: // skip track
             emit ((Server *)(SI->thisObj))->receivedCommand(command);
             return;
-        case 7: //stream
+        case STREAM: //stream
             return;
         }
     }
@@ -335,5 +334,20 @@ void Server::sendToClient(int client_num, int command, QByteArray data){
     SI->BytesSEND = 0;
 
     conn.WSASend(SI, WorkerRoutine_UDPSend);
+}
+
+void Server::TCPBroadCast(int command, QByteArray data){
+    data.prepend(command);
+
+   for(LPSOCKET_INFORMATION SI : client_addresses){
+       ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
+       memset(SI->Buffer, 0, sizeof(SI->Buffer));
+       memcpy(SI->Buffer, data.data(), data.size());
+       SI->DataBuf.buf = SI->Buffer;
+       SI->DataBuf.len = BUFFERSIZE;
+       SI->BytesToSend = BUFFERSIZE;
+       SI->BytesSEND = 0;
+       conn.WSASend(SI, WorkerRoutine_UDPSend);
+   }
 }
 

@@ -54,17 +54,7 @@ private slots:
 
     void on_button_rewind_clicked();
 
-    void handleReceivedHeader(char *data, qint64 len);
-
-    void handleReceivedChunk(char *data, qint64 len);
-
-    void handleReceivedAvailSongs(char *);
-
-    void handleReceivedPlaylist(char *);
-
-
-    void handleReceivedProgressData(char *);
-
+    void handleReceivedCommand(int command, char *data, int len);
 
     void setVolume(int value);
     void setProgress(int value);
@@ -86,6 +76,21 @@ private:
     bool setAudioHeader(QAudioFormat format);
 
     Client client;
+
+    void updateHeader(char *data, qint64 len);
+
+    void addChunk(char *data, qint64 len);
+
+    void updateAvailSongs(char *);
+
+    void updatePlaylist(char *);
+
+
+    void updateProgressData(char *);
+
+    void addPlaylist(QString item);
+
+    void fastforward();
 
 };
 

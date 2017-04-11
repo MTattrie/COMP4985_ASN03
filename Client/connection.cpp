@@ -171,7 +171,7 @@ bool Connection::recv(SOCKET &s, char buffer[]){
     DWORD bytes_to_read = BUFFERSIZE;
     char * bp = buffer;
     int n;
-    while ((n = ::recv(s, bp, bytes_to_read, 0)) < BUFFERSIZE)
+    while (n = ::recv(s, bp, bytes_to_read, 0))
     {
         int error = WSAGetLastError();
         if (error != WSA_IO_PENDING && error != 0)
@@ -184,6 +184,8 @@ bool Connection::recv(SOCKET &s, char buffer[]){
         bp += n;
         bytes_to_read -= n;
         if (n == 0)
+            break;
+        if(bytes_to_read == 0)
             break;
     }
     qDebug() << "Client::recv() buffer contents: " << buffer;

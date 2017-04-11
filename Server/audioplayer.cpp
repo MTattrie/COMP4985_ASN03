@@ -60,7 +60,8 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
         emit streamChunkAudio(chunk, audio_pos);
 
         audio_pos = audio_pos + chunk;
-
+        if(isFastForwarding())
+            qDebug()<<"isFastForwarding";
         if(audio_pos >= audio_buffer.size()){
             playing = false;
             emit songFinished();

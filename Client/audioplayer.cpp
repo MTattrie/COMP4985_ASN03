@@ -61,7 +61,8 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
         chunk = qMin((audio_buffer.size() - audio_pos), len);
         memcpy(data, audio_buffer.constData() + audio_pos, chunk);
 
-
+        if(isFastForwarding())
+            qDebug()<<"isFastForwarding";
 
         audio_pos += chunk;
         progress_current += chunk;
