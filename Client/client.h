@@ -13,7 +13,7 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = 0);
 
-    void start();
+    void start(QString hostname, QString port);
 
     void startTCP();
     void connectTCP();
@@ -23,6 +23,7 @@ public:
     void connectUDP();
     void runUDP();
     void reqeustCommand(int command, QString data = "");
+    void storeServerDetails(QString hostname, QString port);
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
@@ -36,7 +37,8 @@ public slots:
     void requestSong(QString song);
 
 private:
-
+    std::string serverHostName;
+    int portNumber;
 
 };
 

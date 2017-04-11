@@ -58,6 +58,7 @@ private slots:
 
     void setVolume(int value);
     void setProgress(int value);
+    void connectToServer();
 
 private:
     Ui::MainWindow *ui;

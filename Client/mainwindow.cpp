@@ -18,8 +18,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
 
 
-    std::thread(&Client::start, &client).detach();
-
     initAudioOuput();
 
     m_pPalette	= new QPalette();
@@ -30,8 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setPalette(*palette);
 
     connect(ui->volumeSlider,SIGNAL(valueChanged(int)),this,SLOT(setVolume(int)));
+    connect(ui->button_connectToServer,SIGNAL(pressed()),this,SLOT(connectToServer()));
 
-    ui->ProgressSlider->setValue(40);
+    ui->ProgressSlider->setValue(0); //probably remove this line
 //    setStyleSheet("QSlider::handle:volumeSlider {background-color: red;}");
 }
 
@@ -208,6 +207,12 @@ void MainWindow::decodeMessage(QString message) {
     default:
         break;
     }
+}
+
+void MainWindow::connectToServer() {
+    QString hostname = ui->lineEdit_serverHostname->text();
+    QString portNumber = ui->lineEdit_serverPortNumber->text();
+    std::thread(&Client::start, &client, hostname, portNumber).detach();
 }
 
 

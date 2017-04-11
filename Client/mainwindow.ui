@@ -76,7 +76,7 @@ background:transparent
      </rect>
     </property>
     <property name="toolTip">
-     <string>Play/Pause</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/play)</string>
@@ -85,7 +85,7 @@ background:transparent
      <string/>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit">
+   <widget class="QLineEdit" name="lineEdit_serverHostname">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -101,7 +101,7 @@ background:transparent
      <string>IP Address</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="button_connectToServer">
     <property name="geometry">
      <rect>
       <x>280</x>
@@ -111,7 +111,7 @@ background:transparent
      </rect>
     </property>
     <property name="toolTip">
-     <string>Connect to Server</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/connect)
@@ -131,7 +131,7 @@ background:transparent
      </rect>
     </property>
     <property name="toolTip">
-     <string>Fast Forward</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/fastForward)</string>
@@ -150,7 +150,7 @@ background:transparent
      </rect>
     </property>
     <property name="toolTip">
-     <string>Skip Track</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/skipTrack)</string>
@@ -169,7 +169,7 @@ background:transparent
      </rect>
     </property>
     <property name="toolTip">
-     <string>Rewind</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/rewind)</string>
@@ -269,7 +269,7 @@ background:transparent</string>
      </rect>
     </property>
     <property name="toolTip">
-     <string>Add Song to Playlist</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/addSong)</string>
@@ -288,7 +288,7 @@ background:transparent</string>
      </rect>
     </property>
     <property name="toolTip">
-     <string>Download Song</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/download)</string>
@@ -307,11 +307,7 @@ background:transparent</string>
      </rect>
     </property>
     <property name="toolTip">
-     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Upload Song&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string/>
     </property>
     <property name="styleSheet">
      <string notr="true">border-image:url(../assets/ui/upload)</string>
@@ -375,7 +371,7 @@ background:transparent
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit_3">
+   <widget class="QLineEdit" name="lineEdit_serverPortNumber">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -437,19 +433,6 @@ background:transparent
     </property>
     <property name="text">
      <string>Client Port Number</string>
-    </property>
-   </widget>
-   <widget class="QSlider" name="horizontalSlider">
-    <property name="geometry">
-     <rect>
-      <x>240</x>
-      <y>260</y>
-      <width>160</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
   </widget>

@@ -27,9 +27,37 @@ sockaddr_in server;
 
 
 
-void Client::start(){
+void Client::start(QString hostname, QString port){
+    storeServerDetails(hostname, port);
     std::thread(&Client::startTCP, this).detach();
     std::thread(&Client::startUDP, this).detach();
+}
+
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: storeServerDetails
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER:
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: void Client::storeServerDetails(QString hostname, QString port)
+--                  QString hostname: The hostname to connect to
+--                  QString port: The specified port number for communication
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Stores the user input hostname and port number into the client's local variables
+--  so they can be used to connect to the server.
+----------------------------------------------------------------------------------------------------------------------*/
+void Client::storeServerDetails(QString hostname, QString port) {
+    if (!port[0].isDigit())
+        return;
+    serverHostName = hostname.toLocal8Bit().constData();
+    portNumber = port.toInt();
 }
 
 
@@ -57,28 +85,24 @@ void Client::startUDP(){
 
 
 void Client::connectTCP(){
-    string host = "localhost";
-    int port =	7000;
 
     if(!conn.WSASocketTCP(socket_tcp))
         return;
     if(!conn.setoptSO_REUSEADDR(socket_tcp))
         return;
-    if(!conn.connect(socket_tcp, host, port))
+    if(!conn.connect(socket_tcp, serverHostName, portNumber))
         return;
     runTCP();
 }
 
 
 void Client::connectUDP(){
-    string host = "localhost";
-    int port =	7000;
 
     if(!conn.WSASocketUDP(socket_udp))
         return;
     if(!conn.setoptSO_REUSEADDR(socket_udp))
         return;
-    if(!conn.bind(socket_udp, server, port))
+    if(!conn.bind(socket_udp, server, portNumber))
         return;
     if(!conn.setoptIP_ADD_MEMBERSHIP(socket_udp))
         return;
