@@ -7,8 +7,10 @@
 
 using std::string;
 
-#define UPLOAD      0
+#define UPLOAD      13
 #define DOWNLOAD    1
+#define COMPLETE    12
+
 #define ADDLIST     2
 #define PLAYPAUSE   3
 #define FASTFORWORD 4
@@ -17,9 +19,9 @@ using std::string;
 #define STREAM      7
 #define HEADER      8
 #define PROGRESS    9
-#define AVAILSONG     10
-#define PLAYLIST      11
-#define COMPLETE      12
+#define AVAILSONG   10
+#define PLAYLIST    11
+
 
 #define BUFFERSIZE 20000
 

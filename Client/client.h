@@ -25,9 +25,13 @@ public:
     void reqeustCommand(int command, QString data = "");
     void storeServerDetails(QString hostname, QString port);
 
+    bool sendFile(QString filename);
+    bool loadFile(QQueue<QByteArray>& packets, const QString filename);
+
     QString filenames;
     QByteArray downloads;
     bool isDonwloading;
+    bool isUploading;
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
@@ -39,6 +43,7 @@ signals:
 
 public slots:
     void requestSong(QString song);
+    void sendSong(QString song);
 
 private:
     std::string serverHostName;
