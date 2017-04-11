@@ -61,37 +61,30 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QPixmap* m_pPixmap;
+    QPalette* m_pPalette;
+
     QStringListModel *available_song_model;
     QStringListModel *playlist_model;
     QAudioOutput* audio; // class member.
     AudioPlayer *audioPlayer;
-    WavFile sourceFile;
-    QPixmap* m_pPixmap;
-    QPalette* m_pPalette;
+
+    Client client;
 
     bool isSetHeader;
+    bool mute;
+    int audio_volume;
 
     void playNextSong();
     void initAudioOuput();
     bool setAudioHeader(QAudioFormat format);
-
-    Client client;
-
     void updateHeader(char *data, qint64 len);
-
     void addChunk(char *data, qint64 len);
-
     void updateAvailSongs(char *);
-
     void updatePlaylist(char *);
-
-
     void updateProgressData(char *);
-
     void addPlaylist(QString item);
-
     void fastforward();
-
     void receivedSkipTrack();
     void rewind();
     void playpause();

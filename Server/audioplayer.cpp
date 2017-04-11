@@ -12,7 +12,9 @@ bool AudioPlayer::openWavFile(const QString &fileName){
         return false;
     audio_buffer.resize(0);
     audio_pos = 0;
+    progress_current = 0;
     audio_buffer = sourceFile.readAll();
+    progress_max = audio_buffer.size();
     open(QIODevice::ReadOnly);
     return true;
 }
@@ -23,6 +25,8 @@ void AudioPlayer::resetPlayer(){
     fastForwarding = false;
     audio_buffer.resize(0);
     audio_pos = 0;
+    progress_current = 0;
+    progress_max = 0;
     open(QIODevice::ReadOnly);
 }
 
@@ -59,7 +63,10 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
 
         emit streamChunkAudio(chunk, audio_pos);
 
-        audio_pos = audio_pos + chunk;
+        audio_pos += chunk;
+        progress_current += chunk;
+        emit progressAudio((progress_current/(double)progress_max) * 100);
+
         if(isFastForwarding())
             qDebug()<<"isFastForwarding";
         if(audio_pos >= audio_buffer.size()){

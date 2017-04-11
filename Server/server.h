@@ -7,6 +7,7 @@
 
 
 
+
 struct Client
 {
       SOCKET_INFORMATION SocketInfo;
@@ -35,6 +36,9 @@ public:
     void connectUDP();
     void runUDP();
 
+    char *getClientIP(int client_num);
+
+
 
     bool multicast(char *message, const int len);
 
@@ -59,12 +63,15 @@ signals:
     void update_log(QString packet);
     void receivedCommand(int command);
     void newClientConnected(int client_num);
+    void clientDisconnected(QString);
+
     void receivedAddPlaylist(QString);
 
 public slots:
 
 private:
     QQueue<QByteArray> streamQueue;
+    int port;
 
 
 };

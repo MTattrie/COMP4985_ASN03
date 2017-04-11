@@ -62,6 +62,9 @@ public:
     bool createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s);
     bool checkError(LPSOCKET_INFORMATION &SI, DWORD error);
     bool checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred);
+
+
+    int port;
 };
 
 #endif // CONNECTION_H
