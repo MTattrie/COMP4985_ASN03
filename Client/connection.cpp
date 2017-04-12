@@ -1,3 +1,36 @@
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE: connection.cpp
+--
+-- PROGRAM: inotd
+--
+-- FUNCTIONS:
+--    bool Connection::WSAStartup()
+--    bool Connection::WSASocketTCP(SOCKET &s)
+--    bool Connection::WSASocketUDP(SOCKET &s)
+--    bool Connection::bind(SOCKET &s, int port)
+--    bool Connection::connect(SOCKET &s, string host, int port)
+--    bool Connection::setoptSO_REUSEADDR(SOCKET &s)
+--    bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s)
+--    bool Connection::WSACreateEvent(WSAEVENT &event)
+--    bool Connection::WSAEventSelect(SOCKET &sd, WSAEVENT &event, long networkEvents)
+--    bool Connection::WSASetEvent(WSAEVENT &event)
+--    bool Connection::WSAWaitForMultipleEvents(WSAEVENT &event)
+--    bool Connection::send(SOCKET &s, char buffer[])
+--    int Connection::sendto(SOCKET &s, sockaddr_in &server, char buffer[], int len)
+--    bool Connection::recv(SOCKET &s, char buffer[])
+--    int Connection::recvfrom(SOCKET &s, sockaddr_in &server, char buffer[])
+--
+--
+-- DATE: April 11, 2017
+--
+-- DESIGNER: Mark Tattrie, Deric Mccadden, Terry Kang, Jacob Frank
+--
+-- PROGRAMMER:
+--      Deric Mccadden, Terry Kang.
+--
+-- NOTES:
+-- This class contains connection functions.
+----------------------------------------------------------------------------------------------------------------------*/
 #include "connection.h"
 
 #include <winsock2.h>
@@ -273,7 +306,7 @@ bool Connection::send(SOCKET &s, char buffer[]){
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Deric Mccadden, Terry Kang
 --
 -- INTERFACE: bool Connection::sendto(SOCKET &s, char buffer[])
 --
@@ -338,7 +371,7 @@ bool Connection::recv(SOCKET &s, char buffer[]){
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Deric Mccadden, Terry Kang
 --
 -- INTERFACE: int Connection::recvfrom(SOCKET &s, sockaddr_in &server, char buffer[])
 --
