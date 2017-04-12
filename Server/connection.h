@@ -1,7 +1,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include "packet.h"
+#include "global.h"
 
 #include <winsock2.h>
 #include <windows.h>
@@ -64,7 +64,6 @@ public:
     bool createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s);
     bool checkError(LPSOCKET_INFORMATION &SI, DWORD error);
     bool checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred);
-
 
     int port;
 };

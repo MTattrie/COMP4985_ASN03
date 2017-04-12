@@ -65,6 +65,7 @@ AudioPlayer::AudioPlayer(): audio_pos(0), playing(false), fastForwarding(false),
 
 }
 
+<<<<<<< HEAD
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: openWavFile
 --
@@ -83,6 +84,8 @@ AudioPlayer::AudioPlayer(): audio_pos(0), playing(false), fastForwarding(false),
 -- NOTES:
 -- Opens a wav file to play (sourceFile is a WavFile that extends QFile, us QFile function to open)
 ----------------------------------------------------------------------------------------------------------------------*/
+=======
+>>>>>>> a2e66fe482ed2bb44531604a767a5c3726c1eb17
 bool AudioPlayer::openWavFile(const QString &fileName){
     paused = false;
     playing = false;
@@ -315,6 +318,8 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
 -- QT function to read data. If there are no bytes to be read and there can never be more bytes available
 ----------------------------------------------------------------------------------------------------------------------*/
 qint64 AudioPlayer::writeData(const char *data, qint64 len){
+    Q_UNUSED(data);
+    Q_UNUSED(len);
     return 0;
 }
 
@@ -341,6 +346,7 @@ qint64 AudioPlayer::bytesAvailable() const{
     return audio_buffer.size() - audio_pos;
 }
 
+<<<<<<< HEAD
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: pos
 --
@@ -411,12 +417,14 @@ bool AudioPlayer::seek(qint64 pos){
 -- NOTES:
 -- QT function - sets the bool playing to false and paused to true if it is currently playing
 ----------------------------------------------------------------------------------------------------------------------*/
+=======
+>>>>>>> a2e66fe482ed2bb44531604a767a5c3726c1eb17
 bool AudioPlayer::pause(){
     if(playing) {
         paused = true;
         playing = false;
-        //close();
     }
+    close();
     return true;
 }
 
@@ -442,7 +450,7 @@ bool AudioPlayer::start(){
     playing = true;
     if(paused)
         paused = false;
-    //open(QIODevice::ReadOnly);
+    open(QIODevice::ReadOnly);
     return playing;
 }
 

@@ -36,21 +36,19 @@
 -- PROGRAMMER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
 --
 -- NOTES:
--- AudioPlayer extends QIODevice. It is used to open, read, write wav files.
+-- Client cpp containing all functionality to connect to the server, and other clients
+-- on client start it creates a thread to listen for other clients and the server return commands and server streaming
 ----------------------------------------------------------------------------------------------------------------------*/
 
 #include "client.h"
-
 #include <stdio.h>
 #include <winsock2.h>
 #include <errno.h>
 #include <thread>
 #include <QDebug>
 #include "connection.h"
-#include "packet.h"
-
+#include "global.h"
 #include <ws2tcpip.h>
-
 #include <iostream>
 #include <fstream>
 #include <QFile>
@@ -76,16 +74,10 @@
 ----------------------------------------------------------------------------------------------------------------------*/
 Client::Client(QObject *parent) : QObject(parent)
 {
-    isDonwloading=false;
+    isDonwloading = false;
+    peerUDPRunning = false;
     isUploading = false;
 }
-
-
-Connection conn;
-SOCKET socket_tcp;
-SOCKET socket_udp;
-sockaddr_in server;
-
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: start
@@ -110,7 +102,6 @@ void Client::start(QString hostname, QString port){
     std::thread(&Client::startTCP, this).detach();
     std::thread(&Client::startUDP, this).detach();
 }
-
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: storeServerDetails
@@ -278,7 +269,7 @@ void Client::runTCP(){
         WSAResetEvent(readEvent);
 
         if(!conn.recv(socket_tcp, rbuf))
-            continue;        
+            continue;
 
         int command = rbuf[0];
 
@@ -335,7 +326,6 @@ void Client::runUDP(){
         char *data = new char[n-1];
         memcpy(data, &rbuf[1], n-1);
         emit receivedCommand(command, data, n-1);
-
     }
 }
 
@@ -458,12 +448,10 @@ bool Client::sendFile(QString filename){
     QQueue<QByteArray> packets;
     if(!loadFile(packets, filename))
         return false;
-
     OVERLAPPED Overlapped;
     CHAR Buffer[BUFFERSIZE];
     WSABUF DataBuf;
     DWORD BytesSEND;
-    DWORD BytesToSend;
 
     ZeroMemory(&Overlapped, sizeof(WSAOVERLAPPED));
     Overlapped.hEvent = WSACreateEvent();
@@ -479,7 +467,6 @@ bool Client::sendFile(QString filename){
         memcpy(Buffer, packet.data(), packet.size());
         DataBuf.buf = Buffer;
         DataBuf.len = BUFFERSIZE;
-        BytesToSend = BUFFERSIZE;
         BytesSEND = 0;
 
         if (WSASend(socket_tcp, &DataBuf, 1, &BytesSEND, 0,
@@ -551,4 +538,159 @@ bool Client::loadFile(QQueue<QByteArray>& packets, const QString filepathname){
     packets.push_back(packet);
     file.close();
     return true;
+}
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: startPeerUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: startPeerUDP(QString hostname, QString port)
+--              QString hostname - the ip address of the client to connect to for peer to peer
+--              QString port - the client port for peer to peer udp
+--
+-- RETURNS: bool. success on connection to other client
+--
+-- NOTES:
+-- starts peer to peer udp connection getting the port and ip address from the gui
+-- once the socket is set up, it starts a thread to send microphone data and receive microphone data
+----------------------------------------------------------------------------------------------------------------------*/
+bool Client::startPeerUDP(QString hostname, QString port){
+    if (!port[0].isDigit())
+        return false;
+
+    int peerPort = port.toInt();
+    memset((char *)&peer_addr, 0, sizeof(peer_addr));
+    peer_addr.sin_family = AF_INET;
+    peer_addr.sin_addr.s_addr = inet_addr(hostname.toStdString().c_str());
+    peer_addr.sin_port = htons(peerPort);
+
+    sockaddr_in myaddr;
+    memset((char *)&myaddr, 0, sizeof(myaddr));
+    myaddr.sin_family = AF_INET;
+    myaddr.sin_addr.s_addr = (0);
+    myaddr.sin_port = htons(peerPort);
+    if(!conn.WSAStartup())
+        return false;
+    if(!conn.WSASocketUDP(socket_peerUDP))
+        return false;
+    if(!conn.setoptSO_REUSEADDR(socket_peerUDP))
+        return false;
+    if(!conn.bind(socket_peerUDP, myaddr, peerPort))
+        return false;
+
+    peerUDPRunning = true;
+    std::thread(&Client::peerUDPRead, this).detach();
+    std::thread(&Client::peerUDPSend, this).detach();
+
+    return true;
+}
+
+WSAEVENT readEvent;
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: peerUDPSend
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: peerUDPSend()
+--
+-- RETURNS: void
+--
+-- NOTES:
+-- starts peer to peer udp connection getting the port and ip address from the gui
+-- once the socket is set up, it starts a thread to send microphone data and receive microphone data
+----------------------------------------------------------------------------------------------------------------------*/
+void Client::peerUDPSend(){
+    char *bp;
+
+    while(peerUDPRunning){
+        if(micQueue.isEmpty()){
+            continue;
+        }
+        QByteArray data = micQueue.front();
+        bp = data.data();
+
+        conn.sendto(socket_peerUDP, peer_addr, bp, data.size());
+        micQueue.pop_front();
+    }
+    WSACleanup();
+    qDebug()<<"close socket_peerUDP";
+    closesocket (socket_peerUDP);
+}
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: peerUDPRead
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: peerUDPRead()
+--
+-- RETURNS: void
+--
+-- NOTES:
+-- starts peer to peer udp connection getting the port and ip address from the gui
+-- once the socket is set up, it starts a thread to send microphone data and receive microphone data
+----------------------------------------------------------------------------------------------------------------------*/
+void Client::peerUDPRead(){
+    char rbuf[BUFFERSIZE];
+    WSAEVENT readEvent;
+
+    if(!conn.WSACreateEvent(readEvent))
+        return;
+    if(!conn.WSAEventSelect(socket_peerUDP, readEvent, FD_READ))
+        return;
+
+    while (peerUDPRunning) {
+
+        if(!conn.WSAWaitForMultipleEvents(readEvent))
+            break;
+
+        WSAResetEvent(readEvent);
+
+        int n = conn.recvfrom(socket_peerUDP, peer_addr, rbuf);
+
+        if(n<=0)
+            continue;
+
+        char *data = new char[n];
+        memcpy(data, rbuf, n);
+        emit receivedPeerData(data, n);
+    }
+    WSACleanup();
+    qDebug()<<"close socket_peerUDP";
+    closesocket (socket_peerUDP);
+}
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: addMicStream
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER: Terry Kang, Mark Tattrie
+--
+-- INTERFACE: addMicStream(QByteArray &&data)
+--              QByteArray &&data - data to be added to the micQueue to stream
+--
+-- RETURNS: void
+--
+-- NOTES:
+-- mic stream to play from the microphone
+----------------------------------------------------------------------------------------------------------------------*/
+void Client::addMicStream(QByteArray &&data) {
+    micQueue.push_back(data);
 }

@@ -109,7 +109,7 @@ background:transparent</string>
    <widget class="QPushButton" name="addPlaylistBTN">
     <property name="geometry">
      <rect>
-      <x>480</x>
+      <x>510</x>
       <y>250</y>
       <width>41</width>
       <height>41</height>
@@ -152,22 +152,6 @@ background:transparent</string>
     </property>
     <property name="text">
      <string>Current Playlist</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="downloadBTN">
-    <property name="geometry">
-     <rect>
-      <x>620</x>
-      <y>250</y>
-      <width>41</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border-image:url(../assets/ui/download)</string>
-    </property>
-    <property name="text">
-     <string/>
     </property>
    </widget>
    <widget class="QSlider" name="volumeSlider">
@@ -222,7 +206,7 @@ QSlider::sub-page:qlineargradient {
    <widget class="QPushButton" name="uploadBTN">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>590</x>
       <y>250</y>
       <width>41</width>
       <height>41</height>
@@ -355,7 +339,7 @@ background:transparent</string>
      <x>0</x>
      <y>0</y>
      <width>700</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

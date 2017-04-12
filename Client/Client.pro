@@ -28,14 +28,16 @@ SOURCES += main.cpp\
         client.cpp \
         wavfile.cpp \
     connection.cpp \
-    audioplayer.cpp
+    audioplayer.cpp \
+    microphoneplayer.cpp
 
 HEADERS  += mainwindow.h \
             client.h\
             wavfile.h \
     connection.h \
-    packet.h \
-    audioplayer.h
+    audioplayer.h \
+    microphoneplayer.h \
+    global.h
 
 FORMS    += mainwindow.ui
 

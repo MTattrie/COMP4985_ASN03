@@ -1,6 +1,6 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
-#include "packet.h"
+#include "global.h"
 
 #include <winsock2.h>
 #include <windows.h>
@@ -49,7 +49,7 @@ public:
     bool send(SOCKET &sd, char buffer[]);
     bool recv(SOCKET &sd, char buffer[]);
 
-    bool sendto(SOCKET &s, sockaddr_in &server, char buffer[]);
+    int sendto(SOCKET &s, sockaddr_in &server, char buffer[], int len);
     int recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
 
 
