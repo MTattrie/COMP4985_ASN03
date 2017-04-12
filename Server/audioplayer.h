@@ -46,7 +46,6 @@ protected:
      qint64 writeData(const char *data, qint64 len);
 
 signals:
-    void songFinished();
     void streamChunkAudio(qint64 chunk, qint64 pos);
     void progressAudio(int value);
 };
