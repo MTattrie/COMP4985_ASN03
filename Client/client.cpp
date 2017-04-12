@@ -1,3 +1,44 @@
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE: Client.cpp - handles client side function of the program such as establishing connection
+--                              and sending commands
+--
+-- PROGRAM: Client (ComAudio - Final Project)
+--
+-- FUNCTIONS:
+-- AudioPlayer();
+-- bool openWavFile(const QString &fileName);
+-- const QAudioFormat &fileFormat() const;
+-- qint64 headerLength() const;
+-- qint64 pos() const;
+-- bool seek(qint64 pos);
+-- bool pause();
+-- bool start();
+-- QAudioFormat &fastForward();
+-- bool isPlaying();
+-- bool isPaused();
+-- bool isFastForwarding();
+-- bool isFastForwarding(bool forward);
+-- QByteArray readHeaderData();
+-- QByteArray readChunkData(qint64 len, qint64 pos);
+-- bool addChunkData(const char *data, qint64 len);
+-- bool readHeader(const char *data, qint64 len);
+-- void resetPlayer();
+-- qint64 bytesAvailable() const;
+-- void setProgressData(int current, int max = 0);
+--
+--
+-- DATE: April 11 2017
+--
+-- REVISIONS: (Date and Description)
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- NOTES:
+-- AudioPlayer extends QIODevice. It is used to open, read, write wav files.
+----------------------------------------------------------------------------------------------------------------------*/
+
 #include "client.h"
 
 #include <stdio.h>
@@ -16,7 +57,23 @@
 #include <QQueue>
 #include <QFileInfo>
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: start
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER: Jacob Frank, Terry Kang
+--
+-- INTERFACE: Client(QObject *parent)
+--              *parent - parent object
+--
+-- RETURNS: is a constructor
+--
+-- NOTES:
+-- Client constructor
+----------------------------------------------------------------------------------------------------------------------*/
 Client::Client(QObject *parent) : QObject(parent)
 {
     isDonwloading=false;
@@ -30,7 +87,24 @@ SOCKET socket_udp;
 sockaddr_in server;
 
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: start
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: start(QString hostname, QString port)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--starts threads to store server details(available songs, and playlist
+--starts tcp thread to listen for connection/commands
+--starts udp thread to listen for song packets
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::start(QString hostname, QString port){
     storeServerDetails(hostname, port);
     std::thread(&Client::startTCP, this).detach();
@@ -43,11 +117,11 @@ void Client::start(QString hostname, QString port){
 --
 -- DATE: April 10, 2017
 --
--- DESIGNER:
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
 --
 -- PROGRAMMER:
 --
--- INTERFACE: void Client::storeServerDetails(QString hostname, QString port)
+-- INTERFACE: storeServerDetails(QString hostname, QString port)
 --                  QString hostname: The hostname to connect to
 --                  QString port: The specified port number for communication
 --
@@ -65,7 +139,22 @@ void Client::storeServerDetails(QString hostname, QString port) {
     conn.port = portNumber;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: startTCP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: startTCP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  starts tcp connection, checks WSA startup has happened
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::startTCP(){
     if(!conn.WSAStartup())
         return;
@@ -75,7 +164,22 @@ void Client::startTCP(){
     qDebug() << "Client::startTCP() Socket " << socket_tcp << " closed";
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: startUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER: Terry Kang
+--
+-- INTERFACE: startUDP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  starts udp connection, checks WSA startup has happened
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::startUDP(){
     if(!conn.WSAStartup())
         return;
@@ -85,10 +189,22 @@ void Client::startUDP(){
     qDebug() << "Client::startUDP() Socket " << socket_udp << " closed";
 }
 
-
-
-
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: connectTCP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER: Terry Kang
+--
+-- INTERFACE: connectTCP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  connects TCP
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::connectTCP(){
 
     if(!conn.WSASocketTCP(socket_tcp))
@@ -100,7 +216,22 @@ void Client::connectTCP(){
     runTCP();
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: connectUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: connectUDP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  connects UDP
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::connectUDP(){
 
     if(!conn.WSASocketUDP(socket_udp))
@@ -114,7 +245,22 @@ void Client::connectUDP(){
     runUDP();
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: runTCP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: runTCP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  run TCP
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::runTCP(){
     char rbuf[BUFFERSIZE];
     WSAEVENT readEvent;
@@ -147,7 +293,22 @@ void Client::runTCP(){
 }
 
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: runUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: runUDP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  run UDP connection, while there is information in the socket read from it.
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::runUDP(){
     char rbuf[BUFFERSIZE];
     WSAEVENT readEvent;
@@ -179,6 +340,23 @@ void Client::runUDP(){
 }
 
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: requestSong()
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: requestSong(QString song)
+--              QString song - the song filename to download
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  requests a song to be downloaded by writing a download command to the socket
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::requestSong(QString song){
     if(isDonwloading)
         return;
@@ -199,6 +377,25 @@ void Client::requestSong(QString song){
     isDonwloading=true;
 }
 
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: reqeustCommand()
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: reqeustCommand(int command, QString data)
+--                          int command - the command to request (view global.h)
+--                          QString data - the data to write to the socket (i.e what song to request)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  requests a song to be downloaded by writing a download command to the socket
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::reqeustCommand(int command, QString data){
     char buffer[BUFFERSIZE];
     qDebug()<<"reqeustCommand";
@@ -211,6 +408,23 @@ void Client::reqeustCommand(int command, QString data){
         return;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: sendSong
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: sendSong(QString song)
+--              QString song - the song to send
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  wrapper to send song to server, prevents it from trying to send multiple times by having a boolean lock on it
+----------------------------------------------------------------------------------------------------------------------*/
 void Client::sendSong(QString song){
     if(isUploading)
         return;
@@ -220,7 +434,26 @@ void Client::sendSong(QString song){
     isUploading = false;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: sendFile
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: sendFile(QString filename){
+--              QString filename - the song filename to send
+--
+-- RETURNS: bool - success on successfully sending a file, false on overlapped error
+--
+-- NOTES:
+--  sends files to the socket, loads the file into the QByte array then starts the overlapped routine
+--  and sets the flags. While there are packets, copy the packet from the file into the buffer to send and
+--  pops it from the Queue. Writes the buffer to the socket and continues overlapped io function
+--
+----------------------------------------------------------------------------------------------------------------------*/
 bool Client::sendFile(QString filename){
     QQueue<QByteArray> packets;
     if(!loadFile(packets, filename))
@@ -271,6 +504,23 @@ bool Client::sendFile(QString filename){
     return true;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: loadFile
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
+--
+-- PROGRAMMER:
+--
+-- INTERFACE: loadFile(QQueue<QByteArray>& packets, const QString filepathname){
+--
+-- RETURNS: bool. success on loading a file, failure on opening input/output device
+--
+-- NOTES:
+--  opens file to send copying the song into a QByteArray. At the end of a song it appends a COMPLETE command to let the
+--  other side its finished
+----------------------------------------------------------------------------------------------------------------------*/
 bool Client::loadFile(QQueue<QByteArray>& packets, const QString filepathname){
     const QString p(filepathname);
     QFile file(p);
