@@ -10,6 +10,22 @@
 using std::string;
 
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSAStartup
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: WSAStartup()
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wraper for WSAStartup
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSAStartup(){
     WSADATA wsa;
     DWORD Ret;
@@ -27,6 +43,22 @@ bool Connection::WSAStartup(){
  * ================================================================================== */
 
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSASocketTCP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: WSASocketTCP(SOCKET &s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Creates a TCP socket.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSASocketTCP(SOCKET &s){
     if ((s = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0,
             WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
@@ -38,6 +70,22 @@ bool Connection::WSASocketTCP(SOCKET &s){
     return true;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSASocketUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: WSASocketUDP(SOCKET &s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Creates a UDP socket.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSASocketUDP(SOCKET &s){
     if ((s = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, 0)) == INVALID_SOCKET)
     {
@@ -48,7 +96,22 @@ bool Connection::WSASocketUDP(SOCKET &s){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: bind
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bind(SOCKET &s, int port){
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Binds a socket to a specified port.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::bind(SOCKET &s, int port){
     sockaddr_in InternetAddr;
     InternetAddr.sin_family = AF_INET;
@@ -64,7 +127,22 @@ bool Connection::bind(SOCKET &s, int port){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: listen
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: listen(SOCKET &s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Listen to a specfied socket..
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::listen(SOCKET &s){
     int backlog = 5;
     if (::listen(s, backlog))
@@ -76,7 +154,22 @@ bool Connection::listen(SOCKET &s){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: setoptSO_REUSEADDR
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: setoptSO_REUSEADDR(SOCKET &s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Sets SO_REUSEADR on a specified socket.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::setoptSO_REUSEADDR(SOCKET &s){
     int opt = 1;
     if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt)) < 0)
@@ -87,7 +180,22 @@ bool Connection::setoptSO_REUSEADDR(SOCKET &s){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: setoptIP_MULTICAST_TTL
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: setoptIP_MULTICAST_TTL(SOCKET &s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Sets IP_MULTICAST_TTL on a specified socket.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::setoptIP_MULTICAST_TTL(SOCKET &s){
     u_long time = 1;
     if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&time, sizeof(time)) == SOCKET_ERROR)
@@ -98,7 +206,22 @@ bool Connection::setoptIP_MULTICAST_TTL(SOCKET &s){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: setoptIP_MULTICAST_LOOP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: setoptIP_MULTICAST_LOOP(SOCKET &s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Sets IP_MULTICAST_LOOP on a specified socket.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::setoptIP_MULTICAST_LOOP(SOCKET &s){
     BOOL LoopBackFlag = false;
     if(::setsockopt(s, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&LoopBackFlag, sizeof(LoopBackFlag)) == SOCKET_ERROR)
@@ -109,7 +232,22 @@ bool Connection::setoptIP_MULTICAST_LOOP(SOCKET &s){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: setoptIP_ADD_MEMBERSHIP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: setoptIP_ADD_MEMBERSHIP(SOCKET &s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Sets IP_ADD_MEMBERSHIP on a specified socket.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s){
     struct ip_mreq   MulticastAddress;
     MulticastAddress.imr_multiaddr.s_addr = inet_addr(MULTICASTSERVER);
@@ -122,7 +260,22 @@ bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: createSocketInfo
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Creates the socket information.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s){
     if ((SocketInfo = (LPSOCKET_INFORMATION) GlobalAlloc(GPTR, sizeof(SOCKET_INFORMATION))) == NULL)
     {
@@ -148,7 +301,22 @@ bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s){
  *                                   EVENTS
  * ================================================================================== */
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSACreateEvent
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSACreateEvent(WSAEVENT &event)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSACreateEvent
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSACreateEvent(WSAEVENT &event){
     if ((event = ::WSACreateEvent()) == WSA_INVALID_EVENT)
     {
@@ -158,6 +326,22 @@ bool Connection::WSACreateEvent(WSAEVENT &event){
     return true;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSAEventSelect
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSAEventSelect(SOCKET &sd, WSAEVENT &event, long networkEvents){
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSAEventSelect
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSAEventSelect(SOCKET &sd, WSAEVENT &event, long networkEvents){
     if (::WSAEventSelect(sd, event, networkEvents) == SOCKET_ERROR)
     {
@@ -167,7 +351,22 @@ bool Connection::WSAEventSelect(SOCKET &sd, WSAEVENT &event, long networkEvents)
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSASetEvent
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSASetEvent(WSAEVENT &event)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSASetEvent
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSASetEvent(WSAEVENT &event){
     if (::WSASetEvent(event) == FALSE)
     {
@@ -177,7 +376,22 @@ bool Connection::WSASetEvent(WSAEVENT &event){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSAWaitForMultipleEvents
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSAWaitForMultipleEvents(WSAEVENT &event)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSAWaitForMultipleEvents
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSAWaitForMultipleEvents(WSAEVENT &event){
     DWORD index;
     while(TRUE)
@@ -197,7 +411,23 @@ bool Connection::WSAWaitForMultipleEvents(WSAEVENT &event){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSASend
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSASend
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
         LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
     DWORD SendBytes = 0;
@@ -214,7 +444,23 @@ bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSASendTo
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSASendTo
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
                            LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
     DWORD SendBytes = 0;
@@ -243,7 +489,23 @@ bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSARecv
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSARecv(LPSOCKET_INFORMATION &SI,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSARecv
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSARecv(LPSOCKET_INFORMATION &SI,
         LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
     DWORD Flags = 0;
@@ -268,8 +530,23 @@ bool Connection::WSARecv(LPSOCKET_INFORMATION &SI,
     return true;
 }
 
-
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WSARecvFrom
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::WSARecvFrom(LPSOCKET_INFORMATION &SI,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Wrapper for WSARecvFrom
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::WSARecvFrom(LPSOCKET_INFORMATION SI,
         LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
     DWORD Flags = 0;
@@ -295,8 +572,23 @@ bool Connection::WSARecvFrom(LPSOCKET_INFORMATION SI,
     return true;
 }
 
-
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: checkError
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::checkError(LPSOCKET_INFORMATION &SI,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  checks for an error.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::checkError(LPSOCKET_INFORMATION &SI, DWORD error){
     if (error != 0)
     {
@@ -308,7 +600,22 @@ bool Connection::checkError(LPSOCKET_INFORMATION &SI, DWORD error){
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: checkFinished
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Connection::checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  checks if the transfer is finished.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Connection::checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred){
     if (BytesTransferred == 0)
     {
