@@ -29,6 +29,7 @@ public:
     void findAvailableSongs();
 
     void resizeEvent (QResizeEvent* event) {
+      Q_UNUSED(event);
       m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
       setPalette(*m_pPalette);
     }
@@ -37,36 +38,23 @@ signals:
 
 private slots:
     void on_addPlaylistBTN_clicked();
-
     void on_skipBTN_clicked();
-
     void on_rewindBTN_clicked();
-
     void on_ffBTN_clicked();
-
     void on_playBTN_clicked();
+    void on_serverStartBTN_clicked();
+    void on_uploadBTN_clicked();
 
     void handleSongFinished();
-
     void handleStateChanged(QAudio::State newState);
-
     void handleChunkStream(qint64 len, qint64 pos);
-
-    void on_serverStartBTN_clicked();
-
     void handleReceivedCommand(int command);
-
     void handleNewClient(int client_num);
     void handleDisconnetClient(QString);
-
     void handleReceivedAddPlaylist(QString);
 
     void setProgress(int value);
     void setVolume(int value);
-
-
-    void on_uploadBTN_clicked();
-
     void updateAvaliableSongs();
 
 private:
@@ -85,7 +73,6 @@ private:
 
     bool songFinished;
     int audio_volume;
-
 
     void playNextSong();
     void initAudioOuput();

@@ -112,7 +112,7 @@ bool Connection::setoptIP_MULTICAST_LOOP(SOCKET &s){
 
 bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s){
     struct ip_mreq   MulticastAddress;
-    MulticastAddress.imr_multiaddr.s_addr = inet_addr("234.57.7.8");
+    MulticastAddress.imr_multiaddr.s_addr = inet_addr(MULTICASTSERVER);
     MulticastAddress.imr_interface.s_addr = INADDR_ANY;
     if(::setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&MulticastAddress, sizeof(MulticastAddress)) == SOCKET_ERROR)
     {
@@ -221,7 +221,7 @@ bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
 
     sockaddr_in InternetAddr;
     InternetAddr.sin_family = AF_INET;
-    InternetAddr.sin_addr.s_addr = inet_addr("234.57.7.8");
+    InternetAddr.sin_addr.s_addr = inet_addr(MULTICASTSERVER);
     InternetAddr.sin_port = htons(port);
 
     int	client_len = sizeof(InternetAddr);

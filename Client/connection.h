@@ -1,6 +1,6 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
-#include "packet.h"
+#include "global.h"
 
 #include <winsock2.h>
 #include <windows.h>

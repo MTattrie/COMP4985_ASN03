@@ -1,6 +1,6 @@
 #include "server.h"
 #include "connection.h"
-#include "packet.h"
+#include "global.h"
 
 #include <winsock2.h>
 #include <windows.h>
@@ -72,7 +72,7 @@ void Server::connectTCP(){
 
 void Server::runTCP() {
     WSAEVENT acceptEvent;
-    client_address = {0};
+    memset(&client_address, 0, sizeof(client_address));
     int client_len = sizeof(client_address);
     if(!conn.WSACreateEvent(acceptEvent))
         return;
@@ -100,7 +100,9 @@ void Server::acceptThread(WSAEVENT acceptEvent) {
 void Server::readThread(){
     LPSOCKET_INFORMATION SI;
     WSAEVENT readEvent;
-    WSANETWORKEVENTS wsaEvents={0};
+    WSANETWORKEVENTS wsaEvents;
+    memset(&wsaEvents, 0, sizeof(WSANETWORKEVENTS));
+
     int client_num;
 
     if(!conn.createSocketInfo(SI, socket_tcp_accept))
@@ -254,22 +256,6 @@ void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred
 
 }
 
-bool Server::multicast(char *message, const int len){
-    for(auto& SI: client_addresses){
-        qDebug() << "UDPMulticaset() Send to address: " << inet_ntoa(SI->client_address.sin_addr);
-        qDebug() << message;
-        SI->DataBuf.buf = message;
-        SI->DataBuf.len = len;
-
-        //if(!conn.WSASendTo(SI->socket_udp, SI->DataBuf.buf)){
-            //close
-        //}
-    }
-    return true;
-}
-
-
-
 void Server::startUDP() {
     if(!conn.WSAStartup())
         return;
@@ -300,11 +286,8 @@ void Server::runUDP(){
     if(!conn.createSocketInfo(SI, socket_udp))
         return;
 
-    int count = 0;
-
     while(true){
         if(streamQueue.isEmpty()){
-            count = 0;
             continue;
         }
 
@@ -327,6 +310,7 @@ void Server::runUDP(){
 void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
    LPWSAOVERLAPPED Overlapped, DWORD InFlags)
 {
+    Q_UNUSED(InFlags);
     LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
 
     if(!conn.checkError(SI, Error))
@@ -343,6 +327,7 @@ void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
 void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
    LPWSAOVERLAPPED Overlapped, DWORD InFlags)
 {
+    Q_UNUSED(InFlags);
     LPSOCKET_INFORMATION SI = (LPSOCKET_INFORMATION) Overlapped;
 
     if(!conn.checkError(SI, Error))

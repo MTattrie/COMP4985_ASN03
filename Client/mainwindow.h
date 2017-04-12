@@ -32,9 +32,8 @@ public:
     ~MainWindow();
 
     void findAvailableSongs();
-    void decodeMessage(QString message);
-
     void resizeEvent (QResizeEvent* event) {
+      Q_UNUSED(event);
       m_pPalette->setBrush(QPalette::Background,QBrush(m_pPixmap->scaled(width(),height())));
       setPalette(*m_pPalette);
     }
@@ -46,28 +45,20 @@ signals:
 private slots:
 
     void on_button_addSong_clicked();
-
     void on_button_play_clicked();
-
     void on_button_skip_clicked();
-
     void on_button_download_clicked();
-
     void on_button_FastForward_clicked();
-
     void on_button_rewind_clicked();
+    void on_button_connectToClient_clicked();
+    void on_button_upload_clicked();
 
-    void handleReceivedCommand(int command, char *data, int len);
-
+    void handleReceivedCommand(int, char *, int);
+    void handleReceivedRecoredData(qint64 len);
+    void handleReceivedPeerData(char *data, int len);
     void setVolume(int value);
     void setProgress(int value);
     void connectToServer();
-
-    void on_button_connectToClient_clicked();
-
-    void handleReceivedRecoredData(qint64 len);
-    void handleReceivedPeerData(char *data, int len);
-    void on_button_upload_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -76,6 +67,7 @@ private:
 
     QStringListModel *available_song_model;
     QStringListModel *playlist_model;
+
     QAudioOutput* audio; // class member.
     QAudioInput* mic_in; // class member.
     QAudioOutput* mic_out; // class member.
@@ -86,25 +78,22 @@ private:
     Client client;
 
     bool isSetHeader;
-    bool mute;
     int audio_volume;
-    int mic_out_playing;
 
     void playNextSong();
     void initAudioOuput();
-    bool setAudioHeader(QAudioFormat format);
-    void updateHeader(char *data, qint64 len);
-    void addChunk(char *data, qint64 len);
+    bool setAudioHeader(QAudioFormat);
+    void updateHeader(char *, qint64 );
+    void addChunk(char *, qint64);
     void updateAvailSongs(char *);
     void updatePlaylist(char *);
     void updateProgressData(char *);
-    void addPlaylist(QString item);
+    void addPlaylist(QString);
     void fastforward();
     void writeFile();
     void receivedSkipTrack();
     void rewind();
     void playpause();
-
 };
 
 #endif // MAINWINDOW_H

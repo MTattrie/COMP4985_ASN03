@@ -4,6 +4,7 @@ AudioPlayer::AudioPlayer(): audio_pos(0), playing(false), fastForwarding(false),
 {
 
 }
+
 bool AudioPlayer::openWavFile(const QString &fileName){
     paused = false;
     playing = false;
@@ -81,30 +82,21 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
 
 
 qint64 AudioPlayer::writeData(const char *data, qint64 len){
+    Q_UNUSED(data);
+    Q_UNUSED(len);
     return 0;
 }
 
 qint64 AudioPlayer::bytesAvailable() const{
     return audio_buffer.size() - audio_pos;
 }
-qint64 AudioPlayer::pos() const{
-    return audio_pos;
-}
-bool AudioPlayer::seek(qint64 pos){
-    if(pos < 0 || pos > audio_buffer.size())
-        return false;
-
-    audio_pos = pos;
-    return true;
-}
-
 
 bool AudioPlayer::pause(){
     if(playing) {
         paused = true;
         playing = false;
-        close();
     }
+    close();
     return true;
 }
 
