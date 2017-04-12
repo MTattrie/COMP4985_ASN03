@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QStringListModel>
 #include <QDebug>
+#include <QAudioInput>
 #include <QAudioOutput>
 #include <QBuffer>
 #include <thread>
@@ -13,6 +14,8 @@
 #include <QPalette>
 #include "wavfile.h"
 #include "audioplayer.h"
+#include "microphoneplayer.h"
+
 #include "client.h"
 
 
@@ -60,6 +63,11 @@ private slots:
     void setProgress(int value);
     void connectToServer();
 
+    void on_button_connectToClient_clicked();
+
+    void handleReceivedRecoredData(qint64 len);
+    void handleReceivedPeerData(char *data, int len);
+    void handleStateChanged(QAudio::State newState);
     void on_button_upload_clicked();
 
 private:
@@ -70,13 +78,18 @@ private:
     QStringListModel *available_song_model;
     QStringListModel *playlist_model;
     QAudioOutput* audio; // class member.
+    QAudioInput* mic_in; // class member.
+    QAudioOutput* mic_out; // class member.
     AudioPlayer *audioPlayer;
+    MicrophonePlayer *microphonePlayer;
+    QAudioFormat mic_format;
 
     Client client;
 
     bool isSetHeader;
     bool mute;
     int audio_volume;
+    int mic_out_playing;
 
     void playNextSong();
     void initAudioOuput();
@@ -88,9 +101,7 @@ private:
     void updateProgressData(char *);
     void addPlaylist(QString item);
     void fastforward();
-
     void writeFile();
-
     void receivedSkipTrack();
     void rewind();
     void playpause();

@@ -49,7 +49,7 @@ public:
     bool send(SOCKET &sd, char buffer[]);
     bool recv(SOCKET &sd, char buffer[]);
 
-    bool sendto(SOCKET &s, sockaddr_in &server, char buffer[]);
+    int sendto(SOCKET &s, sockaddr_in &server, char buffer[], int len);
     int recvfrom(SOCKET &s, sockaddr_in &server, char buffer[]);
 
 

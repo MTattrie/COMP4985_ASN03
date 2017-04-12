@@ -69,6 +69,7 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
         audio_pos += chunk;
         progress_current += chunk;
         emit progressAudio((progress_current/(double)progress_max) * 100);
+        qDebug()<<"sadsa";
 
         if(audio_pos >= audio_buffer.size()){
             qDebug()<<"audio_pos >= audio_buffer.size()";
@@ -103,7 +104,7 @@ bool AudioPlayer::pause(){
     if(playing) {
         paused = true;
         playing = false;
-        //close();
+        close();
     }
     return true;
 }
@@ -112,7 +113,7 @@ bool AudioPlayer::start(){
     playing = true;
     if(paused)
         paused = false;
-    //open(QIODevice::ReadOnly);
+    open(QIODevice::ReadOnly);
     return playing;
 }
 

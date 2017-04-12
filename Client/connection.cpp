@@ -147,24 +147,12 @@ bool Connection::send(SOCKET &s, char buffer[]){
 }
 
 
-bool Connection::sendto(SOCKET &s, sockaddr_in &server, char buffer[]){
-    DWORD bytes_to_send = BUFFERSIZE;
+int Connection::sendto(SOCKET &s, sockaddr_in &server, char buffer[], int len){
+    DWORD bytes_to_send = len;
     char *bp = buffer;
     int n;
-    while ((n = ::sendto(s, bp, bytes_to_send, 0, (struct sockaddr *)&server, sizeof(server))) < BUFFERSIZE)
-    {
-        if (WSAGetLastError() != WSA_IO_PENDING)
-        {
-            qDebug() << "Connection::WSASend() failed with error" << WSAGetLastError();
-            return false;
-        }
-        bp += n;
-        bytes_to_send -= n;
-        if (n == 0)
-            break;
-    }
-    qDebug() << "Client::send() buffer contents: " << buffer;
-    return true;
+    n = ::sendto(s, bp, bytes_to_send, 0, (struct sockaddr *)&server, sizeof(server));
+    return n;
 }
 
 bool Connection::recv(SOCKET &s, char buffer[]){
