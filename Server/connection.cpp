@@ -1,3 +1,45 @@
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE: connection.cpp
+--
+-- PROGRAM: inotd
+--
+-- FUNCTIONS:
+--    bool Connection::WSAStartup()
+--    bool Connection::WSASocketTCP(SOCKET &s)
+--    bool Connection::WSASocketUDP(SOCKET &s)
+--    bool Connection::bind(SOCKET &s, int port)
+--    bool Connection::listen(SOCKET &s)
+--    bool Connection::setoptSO_REUSEADDR(SOCKET &s)
+--    bool Connection::setoptIP_MULTICAST_TTL(SOCKET &s)
+--    bool Connection::setoptIP_MULTICAST_LOOP(SOCKET &s)
+--    bool Connection::setoptIP_ADD_MEMBERSHIP(SOCKET &s)
+--    bool Connection::createSocketInfo(LPSOCKET_INFORMATION &SocketInfo, SOCKET s)
+--    bool Connection::WSACreateEvent(WSAEVENT &event)
+--    bool Connection::WSAEventSelect(SOCKET &sd, WSAEVENT &event, long networkEvents)
+--    bool Connection::WSASetEvent(WSAEVENT &event)
+--    bool Connection::WSAWaitForMultipleEvents(WSAEVENT &event)
+--    bool Connection::WSASend(LPSOCKET_INFORMATION &SI,
+--        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--    bool Connection::WSASendTo(LPSOCKET_INFORMATION &SI,
+--        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--    bool Connection::WSARecv(LPSOCKET_INFORMATION &SI,
+--        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--    bool Connection::WSARecvFrom(LPSOCKET_INFORMATION SI,
+--        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+--    bool Connection::checkError(LPSOCKET_INFORMATION &SI, DWORD error)
+--    bool Connection::checkFinished(LPSOCKET_INFORMATION &SI, DWORD BytesTransferred)
+--
+--
+-- DATE: April 11, 2017
+--
+-- DESIGNER: Mark Tattrie, Deric Mccadden, Terry Kang, Jacob Frank
+--
+-- PROGRAMMER:
+--      Deric Mccadden, Terry Kang.
+--
+-- NOTES:
+-- This class contains connection functions.
+----------------------------------------------------------------------------------------------------------------------*/
 #include "connection.h"
 
 #include <winsock2.h>

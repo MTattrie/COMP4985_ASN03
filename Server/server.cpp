@@ -1,3 +1,49 @@
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE: server.cpp
+--
+-- PROGRAM: inotd
+--
+-- FUNCTIONS:
+--    void Server::Server(QObject *parent) : QObject(parent)
+--    bool Server::setPort(QString _port)
+--    void Server::start()
+--    bool Server::setPort(QString _port)
+--    void Server::startTCP()
+--    void Server::connectTCP()
+--    void Server::runTCP()
+--    void Server::acceptThread(WSAEVENT acceptEvent)
+--    void Server::readThread()
+--    void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
+--      LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--    void Server::saveFile(QByteArray data, QString filename)
+--    void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
+--      LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--    void Server::startUDP()
+--    void Server::connectUDP()
+--    void Server::runUDP()
+--    void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
+--      LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--    void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
+--      LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--    void Server::addStreamData(QByteArray data)
+--    void Server::resetStreamData()
+--    void Server::sendToClient(int client_num, int command, QByteArray data)
+--    void Server::TCPBroadCast(int command, QByteArray data)
+--    bool Server::sendFile(LPSOCKET_INFORMATION &SI, string filename)
+--    bool Server::loadFile(QQueue<QByteArray>& packets, const string filename)
+--    char *Server::getClientIP(int client_num)
+--
+--
+-- DATE: April 11, 2017
+--
+-- DESIGNER: Mark Tattrie, Deric Mccadden, Terry Kang, Jacob Frank
+--
+-- PROGRAMMER:
+--      Deric Mccadden, Terry Kang.
+--
+-- NOTES:
+-- This class contains the core Server logic.
+----------------------------------------------------------------------------------------------------------------------*/
 #include "server.h"
 #include "connection.h"
 #include "global.h"
@@ -58,7 +104,7 @@ void Server::start(){
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Deric Mccadden, Terry Kang
 --
 -- INTERFACE: bool Server::setPort(QString _port)
 --
@@ -194,7 +240,7 @@ void Server::acceptThread(WSAEVENT acceptEvent) {
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Deric Mccadden, Terry Kang
 --
 -- INTERFACE: void Server::readThread()
 --
@@ -269,7 +315,7 @@ void Server::readThread(){
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Deric Mccadden,Terry Kang
 --
 -- INTERFACE: void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
         LPWSAOVERLAPPED Overlapped, DWORD InFlags)
@@ -517,7 +563,7 @@ void Server::runUDP(){
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Terry Kang
 --
 -- INTERFACE: void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
         LPWSAOVERLAPPED Overlapped, DWORD InFlags)
@@ -551,7 +597,7 @@ void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Terry Kang
 --
 -- INTERFACE: void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
         LPWSAOVERLAPPED Overlapped, DWORD InFlags)
@@ -587,7 +633,7 @@ void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Terry Kang
 --
 -- INTERFACE: void Server::addStreamData(QByteArray data)
 --
@@ -607,7 +653,7 @@ void Server::addStreamData(QByteArray data){
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Terry Kang
 --
 -- INTERFACE: void Server::resetStreamData(QByteArray data)
 --
@@ -793,7 +839,7 @@ bool Server::loadFile(QQueue<QByteArray>& packets, const string filename){
 --
 -- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
 --
--- PROGRAMMER: Deric Mccadden
+-- PROGRAMMER: Terry Kang
 --
 -- INTERFACE: char *Server::getClientIP(int client_num)
 --
