@@ -299,8 +299,6 @@ qint64 AudioPlayer::readData(char *data, qint64 len){
 --
 -- DATE: April 11 2017
 --
--- REVISIONS: (Date and Description)
---
 -- DESIGNER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
 --
 -- PROGRAMMER: Terry Kang, Deric Mccadden, Jacob Frank, Mark Tattrie
