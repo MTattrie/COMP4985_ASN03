@@ -265,7 +265,7 @@ void Server::readThread(){
         return;
 
     SI->client_address = client_address;
-    client_num = client_addresses.size();
+    client_num = (int)client_addresses.size();
     client_addresses.push_back(SI);
 
     QByteArray upload;
