@@ -67,7 +67,6 @@ private slots:
 
     void handleReceivedRecoredData(qint64 len);
     void handleReceivedPeerData(char *data, int len);
-    void handleStateChanged(QAudio::State newState);
     void on_button_upload_clicked();
 
 private:

@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listView_playlist->setModel(playlist_model);
 
     QObject::connect(this, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
-    QObject::connect(this, SIGNAL( sendSong(QString) ), &client, SLOT( sendSong(QString) ));
+    QObject::connect(this, SIGNAL( sendSong(QString) ), &client, SLOT(sendSong(QString)));
     QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
     QObject::connect(&client, SIGNAL( receivedPeerData(char*,int)), this, SLOT(handleReceivedPeerData(char*,int)));
 
@@ -387,7 +387,6 @@ void MainWindow::on_button_connectToClient_clicked()
         mic_in->start(microphonePlayer);
         setVolume(audio_volume);
         microphonePlayer->start();
-        connect(mic_out, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
     }else{
         mic_out->stop();
         mic_in->stop();

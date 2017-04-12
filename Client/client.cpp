@@ -130,7 +130,7 @@ void Client::runTCP(){
         WSAResetEvent(readEvent);
 
         if(!conn.recv(socket_tcp, rbuf))
-            continue;        
+            continue;
 
         int command = rbuf[0];
 
@@ -349,18 +349,16 @@ void Client::peerUDPSend(){
     WSACleanup();
     qDebug()<<"close socket_peerUDP";
     closesocket (socket_peerUDP);
-    WSASetEvent(readEvent);
 }
 
 
 void Client::peerUDPRead(){
     char rbuf[BUFFERSIZE];
     WSAEVENT readEvent;
-    WSANETWORKEVENTS wsaEvents={0};
 
     if(!conn.WSACreateEvent(readEvent))
         return;
-    if(!conn.WSAEventSelect(socket_peerUDP, readEvent, FD_READ | FD_CLOSE))
+    if(!conn.WSAEventSelect(socket_peerUDP, readEvent, FD_READ))
         return;
 
     while (peerUDPRunning) {
@@ -368,12 +366,6 @@ void Client::peerUDPRead(){
         if(!conn.WSAWaitForMultipleEvents(readEvent))
             break;
 
-        if(WSAEnumNetworkEvents(socket_peerUDP,readEvent,&wsaEvents) == SOCKET_ERROR)
-            break;
-
-        if(wsaEvents.lNetworkEvents & FD_CLOSE){
-            break;
-        }
         WSAResetEvent(readEvent);
 
         int n = conn.recvfrom(socket_peerUDP, peer_addr, rbuf);
@@ -385,9 +377,9 @@ void Client::peerUDPRead(){
         memcpy(data, rbuf, n);
         emit receivedPeerData(data, n);
     }
-
+    WSACleanup();
     qDebug()<<"close socket_peerUDP";
-    peerUDPRunning = false;
+    closesocket (socket_peerUDP);
 }
 
 void Client::addMicStream(QByteArray &&data) {
