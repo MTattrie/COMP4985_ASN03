@@ -506,6 +506,7 @@ void MainWindow::updateProgressData(char *progressData){
     audioPlayer->setProgressData(stringList.at(0).toInt(), stringList.at(1).toInt());
 }
 
+
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION: connectToServer()
 --
@@ -522,6 +523,7 @@ void MainWindow::updateProgressData(char *progressData){
 -- NOTES:
 -- Reads the host name and port number form the UI and connects to the server
 ----------------------------------------------------------------------------------------------------------------------*/
+
 void MainWindow::connectToServer() {
     QString hostname = ui->lineEdit_serverHostname->text();
     QString portNumber = ui->lineEdit_serverPortNumber->text();
@@ -810,9 +812,9 @@ void MainWindow::on_button_connectToClient_clicked()
         QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
         if (!info.isFormatSupported(mic_format)) {
             qWarning()<<"default format not supported try to use nearest";
-            //format = info.nearestFormat(format);
-            client.peerUDPRunning = false;
-            return;
+            mic_format = info.nearestFormat(mic_format);
+            //client.peerUDPRunning = false;
+            //return;
         }
         qDebug()<<"Format";
         mic_out  = new QAudioOutput(mic_format, this);

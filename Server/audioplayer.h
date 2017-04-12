@@ -19,7 +19,6 @@ public:
     bool myseek(qint64 pos);
     bool pause();
     bool start();
-    QAudioFormat &fastForward();
     bool isPlaying();
     bool isPaused();
     bool isFastForwarding();
@@ -32,17 +31,16 @@ public:
     qint64 bytesAvailable() const;
     qint64 audioBufferSize() const;
 
-
 private:
     qint64     audio_pos;
     qint64     progress_current;
     qint64     progress_max;
     QByteArray audio_buffer;
     WavFile sourceFile;
-
     bool playing;
     bool fastForwarding;
     bool paused;
+
 protected:
      qint64 readData(char *data, qint64 len);
      qint64 writeData(const char *data, qint64 len);
@@ -51,7 +49,6 @@ signals:
     void songFinished();
     void streamChunkAudio(qint64 chunk, qint64 pos);
     void progressAudio(int value);
-
 };
 
 #endif // AUDIOPLAYER_H

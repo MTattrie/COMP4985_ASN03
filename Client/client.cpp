@@ -1,15 +1,12 @@
 #include "client.h"
-
 #include <stdio.h>
 #include <winsock2.h>
 #include <errno.h>
 #include <thread>
 #include <QDebug>
 #include "connection.h"
-#include "packet.h"
-
+#include "global.h"
 #include <ws2tcpip.h>
-
 #include <iostream>
 #include <fstream>
 #include <QFile>
@@ -23,15 +20,6 @@ Client::Client(QObject *parent) : QObject(parent)
     peerUDPRunning = false;
     isUploading = false;
 }
-
-
-Connection conn;
-SOCKET socket_tcp;
-SOCKET socket_udp;
-SOCKET socket_peerUDP;
-sockaddr_in server;
-sockaddr_in peer_addr;
-
 
 void Client::start(QString hostname, QString port){
     storeServerDetails(hostname, port);
@@ -172,7 +160,6 @@ void Client::runUDP(){
         char *data = new char[n-1];
         memcpy(data, &rbuf[1], n-1);
         emit receivedCommand(command, data, n-1);
-
     }
 }
 
@@ -226,7 +213,6 @@ bool Client::sendFile(QString filename){
     CHAR Buffer[BUFFERSIZE];
     WSABUF DataBuf;
     DWORD BytesSEND;
-    DWORD BytesToSend;
 
     ZeroMemory(&Overlapped, sizeof(WSAOVERLAPPED));
     Overlapped.hEvent = WSACreateEvent();
@@ -242,7 +228,6 @@ bool Client::sendFile(QString filename){
         memcpy(Buffer, packet.data(), packet.size());
         DataBuf.buf = Buffer;
         DataBuf.len = BUFFERSIZE;
-        BytesToSend = BUFFERSIZE;
         BytesSEND = 0;
 
         if (WSASend(socket_tcp, &DataBuf, 1, &BytesSEND, 0,
@@ -334,7 +319,6 @@ WSAEVENT readEvent;
 
 void Client::peerUDPSend(){
     char *bp;
-    int n;
 
     while(peerUDPRunning){
         if(micQueue.isEmpty()){
