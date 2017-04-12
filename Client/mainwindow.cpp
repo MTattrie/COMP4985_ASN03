@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <ostream>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -18,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listView_playlist->setModel(playlist_model);
 
     QObject::connect(this, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
+    QObject::connect(this, SIGNAL( sendSong(QString) ), &client, SLOT( sendSong(QString) ));
     QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
     QObject::connect(&client, SIGNAL( receivedPeerData(char*,int)), this, SLOT(handleReceivedPeerData(char*,int)));
 
@@ -295,6 +297,7 @@ void MainWindow::playpause(){
     }
 }
 int count = 0;
+
 void MainWindow::handleReceivedCommand(int command, char *data, int len){
     switch(command){
         case UPLOAD:
@@ -352,7 +355,7 @@ void MainWindow::writeFile(){
     }
 
     client.filenames.clear();
-    client.filenames.clear();
+    client.downloads.clear();
     client.isDonwloading=false;
 }
 
@@ -413,24 +416,9 @@ void MainWindow::handleReceivedPeerData(char *data, int len){
     delete data;
 }
 
-void MainWindow::handleStateChanged(QAudio::State newState)
+void MainWindow::on_button_upload_clicked()
 {
-    switch (newState) {
-        case QAudio::IdleState:
-            qDebug() << "IdleState";
-            break;
-
-        case QAudio::StoppedState:
-            qDebug() << "StoppedState";
-            break;
-        case QAudio::SuspendedState:
-            qDebug() << "SuspendedState";
-            break;
-        case QAudio::ActiveState:
-            qDebug() << "ActiveState";
-            break;
-        default:
-            // ... other cases as appropriate
-            break;
-    }
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open Wav"), "", tr("Audio Files (*.wav)"));
+    emit sendSong(fileName);
 }

@@ -40,6 +40,8 @@ public:
     bool sendFile(LPSOCKET_INFORMATION &SI, string filename);
     bool loadFile(QQueue<QByteArray>& packets, const string filename);
 
+    void saveFile(QByteArray data, QString filename);
+
     char *getClientIP(int client_num);
 
 
@@ -67,7 +69,7 @@ signals:
     void receivedCommand(int command);
     void newClientConnected(int client_num);
     void clientDisconnected(QString);
-
+    void updateAvaliableSongs();
     void receivedAddPlaylist(QString);
 
 public slots:

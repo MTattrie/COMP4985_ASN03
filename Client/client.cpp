@@ -12,12 +12,16 @@
 
 #include <iostream>
 #include <fstream>
+#include <QFile>
+#include <QQueue>
+#include <QFileInfo>
 
 
 Client::Client(QObject *parent) : QObject(parent)
 {
     isDonwloading = false;
     peerUDPRunning = false;
+    isUploading = false;
 }
 
 
@@ -205,6 +209,95 @@ void Client::reqeustCommand(int command, QString data){
         return;
 }
 
+void Client::sendSong(QString song){
+    if(isUploading)
+        return;
+
+    isUploading = true;
+    sendFile(song);
+    isUploading = false;
+}
+
+bool Client::sendFile(QString filename){
+    QQueue<QByteArray> packets;
+    if(!loadFile(packets, filename))
+        return false;
+    OVERLAPPED Overlapped;
+    CHAR Buffer[BUFFERSIZE];
+    WSABUF DataBuf;
+    DWORD BytesSEND;
+    DWORD BytesToSend;
+
+    ZeroMemory(&Overlapped, sizeof(WSAOVERLAPPED));
+    Overlapped.hEvent = WSACreateEvent();
+    if(Overlapped.hEvent == NULL){
+        return false;
+    }
+    DWORD Flags;
+    while(!packets.empty()){
+        QByteArray packet = packets.front();
+        packets.pop_front();
+
+        memset(Buffer, 0, BUFFERSIZE);
+        memcpy(Buffer, packet.data(), packet.size());
+        DataBuf.buf = Buffer;
+        DataBuf.len = BUFFERSIZE;
+        BytesToSend = BUFFERSIZE;
+        BytesSEND = 0;
+
+        if (WSASend(socket_tcp, &DataBuf, 1, &BytesSEND, 0,
+                &Overlapped, NULL) == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != WSA_IO_PENDING)
+            {
+                qDebug() << "Client::sendFile() failed with error" << WSAGetLastError();
+                return false;
+            }
+            if(WSAWaitForMultipleEvents(1, &Overlapped.hEvent, FALSE, INFINITE, FALSE) == WAIT_TIMEOUT){
+                qDebug() << "Client::sendFile() failed with timeout";
+            }
+            qDebug() << "Client::sendFile() WSA_IO_PENDING";
+        }
+        if(!WSAGetOverlappedResult(socket_tcp, &Overlapped, &BytesSEND, FALSE, &Flags)){
+            qDebug()<<"sendFile failed with error: " << WSAGetLastError();
+        }
+    }
+
+    qDebug() << "Client::sendFile() Completed transfer: " << filename;
+    return true;
+}
+
+bool Client::loadFile(QQueue<QByteArray>& packets, const QString filepathname){
+    const QString p(filepathname);
+    QFile file(p);
+
+    QFileInfo fileInfo(file.fileName());
+    QString filename(fileInfo.fileName());
+
+
+    if(!file.open(QIODevice::ReadOnly))
+        return false;
+
+    QByteArray data = file.readAll();
+
+    qint64 pos = 0;
+    qint64 len =  BUFFERSIZE - 1;
+
+    while(pos < data.size()) {
+        QByteArray packet;
+        qint64 chunk = qMin((data.size() - pos), len);
+        packet.append(UPLOAD);
+        packet.append(data.mid(pos, chunk));
+        packets.push_back(packet);
+        pos += chunk;
+    }
+    QByteArray packet;
+    packet.append(COMPLETE);
+    packet.append(filename);
+    packets.push_back(packet);
+    file.close();
+    return true;
+}
 
 bool Client::startPeerUDP(QString hostname, QString port){
     if (!port[0].isDigit())
@@ -300,4 +393,3 @@ void Client::peerUDPRead(){
 void Client::addMicStream(QByteArray &&data) {
     micQueue.push_back(data);
 }
-

@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string>
+#include <QByteArray>
 
 typedef struct _SOCKET_INFORMATION {
    OVERLAPPED Overlapped;
@@ -17,6 +18,7 @@ typedef struct _SOCKET_INFORMATION {
    DWORD BytesSEND;
    DWORD BytesRECV;
    DWORD BytesToSend;
+   QByteArray *upload;
    void *thisObj;
 } SOCKET_INFORMATION, * LPSOCKET_INFORMATION;
 

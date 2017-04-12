@@ -31,11 +31,14 @@ public:
     void peerUDPSend();
     void addMicStream(QByteArray &&data);
 
+    bool sendFile(QString filename);
+    bool loadFile(QQueue<QByteArray>& packets, const QString filename);
 
     QString filenames;
     QByteArray downloads;
     bool isDonwloading;
     bool peerUDPRunning;
+    bool isUploading;
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
@@ -48,6 +51,7 @@ signals:
 
 public slots:
     void requestSong(QString song);
+    void sendSong(QString song);
 
 private:
     std::string serverHostName;

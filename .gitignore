@@ -4,3 +4,10 @@ Server/Server.pro.user
 Client/.qmake.stash
 Client/Makefile*
 Client/debug
+Client/ui_mainwindow.h
+Server/.qmake.stash
+Server/Makefile
+Server/Makefile.Debug
+Server/Makefile.Release
+Server/debug/
+Server/ui_mainwindow.h
