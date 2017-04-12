@@ -21,9 +21,7 @@ SOCKET socket_tcp_accept;
 SOCKET socket_tcp_listen;
 struct sockaddr_in client_address;
 SOCKET socket_udp;
-
 std::vector<LPSOCKET_INFORMATION> client_addresses;
-
 std::queue<string> packet_queue;
 
 
@@ -32,11 +30,43 @@ Server::Server(QObject *parent) : QObject(parent)
 }
 
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: start
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::start()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  starts the server threads.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::start(){
     std::thread(&Server::startTCP, this).detach();
     std::thread(&Server::startUDP, this).detach();
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: setPort
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Server::setPort(QString _port)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  Sets the server port.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Server::setPort(QString _port) {
     bool convertOK;
     port = _port.toInt(&convertOK);
@@ -47,7 +77,22 @@ bool Server::setPort(QString _port) {
     return true;
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: startTCP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::startTCP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Starts the tcp server.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::startTCP() {
     if(!conn.WSAStartup())
         return;
@@ -57,6 +102,22 @@ void Server::startTCP() {
     WSACleanup();
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: connectTCP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::connectTCP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  connects the tcp server.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::connectTCP(){
     if(!conn.WSASocketTCP(socket_tcp_listen))
         return;
@@ -69,7 +130,22 @@ void Server::connectTCP(){
     runTCP();
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: runTCP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::runTCP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  runs the tcp server.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::runTCP() {
     WSAEVENT acceptEvent;
     memset(&client_address, 0, sizeof(client_address));
@@ -85,7 +161,22 @@ void Server::runTCP() {
     }
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: acceptThread
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::acceptThread(WSAEVENT acceptEvent)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  acceps connections and makes read threads.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::acceptThread(WSAEVENT acceptEvent) {
     while(true) {
         if(!conn.WSAWaitForMultipleEvents(acceptEvent))
@@ -96,7 +187,22 @@ void Server::acceptThread(WSAEVENT acceptEvent) {
     qDebug() << "acceptThread() Closing acceptThread:";
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: readThread
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::readThread()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  handles read events. starts a thread for each read event.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::readThread(){
     LPSOCKET_INFORMATION SI;
     WSAEVENT readEvent;
@@ -156,7 +262,23 @@ void Server::readThread(){
     qDebug() << "readThread() Closing readThread:";
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WorkerRoutine_RecvCommand
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Receive commands from the clients and call the appropriate functions per command.
+----------------------------------------------------------------------------------------------------------------------*/
 void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
         LPWSAOVERLAPPED Overlapped, DWORD InFlags) {
     (void)InFlags;//this is not used, but cannot be removed without breaking the callback.
@@ -222,6 +344,22 @@ void CALLBACK Server::WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransfer
 
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: saveFile
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::saveFile(QByteArray data, QString filename)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Save a received file to disk.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::saveFile(QByteArray data, QString filename){
     QString path("../assets/musics/");
     path.append(filename);
@@ -232,6 +370,23 @@ void Server::saveFile(QByteArray data, QString filename){
     file.close();
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: saveFile
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Worker routine for sending a list.
+----------------------------------------------------------------------------------------------------------------------*/
 void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred,
         LPWSAOVERLAPPED Overlapped, DWORD InFlags) {
     (void)InFlags;//this is not used, but cannot be removed without breaking the callback.
@@ -256,6 +411,22 @@ void CALLBACK Server::WorkerRoutine_SendList(DWORD Error, DWORD BytesTransferred
 
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: startUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::startUDP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Start a UDP server.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::startUDP() {
     if(!conn.WSAStartup())
         return;
@@ -264,6 +435,22 @@ void Server::startUDP() {
     WSACleanup();
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: connectUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::connectUDP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  connect the UDP server.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::connectUDP(){
     if(!conn.WSASocketUDP(socket_udp))
         return;
@@ -280,6 +467,22 @@ void Server::connectUDP(){
     runUDP();
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: runUDP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::runUDP()
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  runs the UDP server.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::runUDP(){
 
     LPSOCKET_INFORMATION SI;
@@ -307,6 +510,23 @@ void Server::runUDP(){
     }
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WorkerRoutine_UDPSend
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Worker routine for sending UDP.
+----------------------------------------------------------------------------------------------------------------------*/
 void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
    LPWSAOVERLAPPED Overlapped, DWORD InFlags)
 {
@@ -324,6 +544,23 @@ void CALLBACK Server::WorkerRoutine_UDPSend(DWORD Error, DWORD BytesTransferred,
    }
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: WorkerRoutine_TCPSend
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
+        LPWSAOVERLAPPED Overlapped, DWORD InFlags)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Worker routine for sending TCP.
+----------------------------------------------------------------------------------------------------------------------*/
 void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
    LPWSAOVERLAPPED Overlapped, DWORD InFlags)
 {
@@ -343,14 +580,62 @@ void CALLBACK Server::WorkerRoutine_TCPSend(DWORD Error, DWORD BytesTransferred,
    }
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: addStreamData
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::addStreamData(QByteArray data)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  add stream data.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::addStreamData(QByteArray data){
     streamQueue.push_back(data);
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: resetStreamData
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::resetStreamData(QByteArray data)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  reset stream data.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::resetStreamData(){
     streamQueue.clear();
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: sendToClient
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::sendToClient(int client_num, int command, QByteArray data)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  send command to client.
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::sendToClient(int client_num, int command, QByteArray data){
     LPSOCKET_INFORMATION SI = client_addresses.at(client_num);
     data.prepend(command);
@@ -366,6 +651,22 @@ void Server::sendToClient(int client_num, int command, QByteArray data){
     conn.WSASend(SI, WorkerRoutine_TCPSend);
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: TCPBroadCast
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: void Server::TCPBroadCast(int command, QByteArray data)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  TCP broadcast to all clients
+----------------------------------------------------------------------------------------------------------------------*/
 void Server::TCPBroadCast(int command, QByteArray data){
     data.prepend(command);
 
@@ -381,6 +682,22 @@ void Server::TCPBroadCast(int command, QByteArray data){
    }
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: sendFile
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Server::sendFile(LPSOCKET_INFORMATION &SI, string filename)
+--
+-- RETURNS: void.
+--
+-- NOTES:
+--  Send a file to a client.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Server::sendFile(LPSOCKET_INFORMATION &SI, string filename){
     QQueue<QByteArray> packets;
     if(!loadFile(packets, filename))
@@ -425,6 +742,22 @@ bool Server::sendFile(LPSOCKET_INFORMATION &SI, string filename){
     return true;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: loadFile
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: bool Server::loadFile(QQueue<QByteArray>& packets, const string filename)
+--
+-- RETURNS: bool.
+--
+-- NOTES:
+--  load a file for sending.
+----------------------------------------------------------------------------------------------------------------------*/
 bool Server::loadFile(QQueue<QByteArray>& packets, const string filename){
     QString path("../assets/musics/");
     path.append(filename.c_str());
@@ -453,6 +786,22 @@ bool Server::loadFile(QQueue<QByteArray>& packets, const string filename){
     return true;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION: getClientIP
+--
+-- DATE: April 10, 2017
+--
+-- DESIGNER: Mark Tattrie, Jacob frank, Terry Kang, Deric Mccadden
+--
+-- PROGRAMMER: Deric Mccadden
+--
+-- INTERFACE: char *Server::getClientIP(int client_num)
+--
+-- RETURNS: char.
+--
+-- NOTES:
+--  get the client ip.
+----------------------------------------------------------------------------------------------------------------------*/
 char *Server::getClientIP(int client_num){
     char *ip = inet_ntoa(client_addresses.at(client_num)->client_address.sin_addr);
     return ip;
