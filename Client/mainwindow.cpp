@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QObject::connect(this, SIGNAL( requestSong(QString) ), &client, SLOT( requestSong(QString) ));
     QObject::connect(&client, SIGNAL( receivedCommand(int,char*,int)), this, SLOT(handleReceivedCommand(int,char*,int)));
-
+    QObject::connect(&client, SIGNAL( receivedPeerData(char*,int)), this, SLOT(handleReceivedPeerData(char*,int)));
 
     initAudioOuput();
 
@@ -36,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->lineEdit_serverHostname->setText("localhost");
     ui->lineEdit_serverPortNumber->setText("7000");
+    ui->client_IP->setText("127.0.0.1");
+    ui->client_Port->setText("9000");
     audio_volume = 99;
 
 }
@@ -64,8 +66,6 @@ void MainWindow::on_button_play_clicked()
 {
     qDebug()<<"on_button_play_clicked";
     client.reqeustCommand(PLAYPAUSE);
-    //audio->suspend();
-    //audioPlayer->pause();
 }
 
 void MainWindow::on_button_skip_clicked()
@@ -95,8 +95,20 @@ void MainWindow::on_button_rewind_clicked()
 void MainWindow::initAudioOuput(){
     audio = new QAudioOutput();
     audioPlayer = new AudioPlayer();
+    microphonePlayer = new MicrophonePlayer();
+    mic_in = nullptr;
+    mic_out = nullptr;
     isSetHeader = false;
     QObject::connect(audioPlayer, SIGNAL( progressAudio(int)), this, SLOT(setProgress(int)));
+    QObject::connect(microphonePlayer, SIGNAL( recorded(qint64)), this, SLOT(handleReceivedRecoredData(qint64)));
+
+    mic_format.setSampleRate(22050);
+    mic_format.setChannelCount(1);
+    mic_format.setSampleSize(16);
+    mic_format.setCodec("audio/pcm");
+    mic_format.setByteOrder(QAudioFormat::LittleEndian);
+    mic_format.setSampleType(QAudioFormat::SignedInt);
+
 
 }
 
@@ -342,4 +354,83 @@ void MainWindow::writeFile(){
     client.filenames.clear();
     client.filenames.clear();
     client.isDonwloading=false;
+}
+
+void MainWindow::on_button_connectToClient_clicked()
+{
+    if(!microphonePlayer->isPlaying()){
+        QString ip = ui->client_IP->text();
+        QString port = ui->client_Port->text();
+
+        if(ip.size()==0 || port.size() == 0 )
+            return;
+
+        if(!client.startPeerUDP(ip, port)){
+            qDebug()<<"setPeerUDP Fail";
+            return;
+        }
+
+        QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
+        if (!info.isFormatSupported(mic_format)) {
+            qWarning()<<"default format not supported try to use nearest";
+            //format = info.nearestFormat(format);
+            client.peerUDPRunning = false;
+            return;
+        }
+        qDebug()<<"Format";
+        mic_out  = new QAudioOutput(mic_format, this);
+        mic_in = new QAudioInput(mic_format, this);
+        mic_out->start(microphonePlayer);
+        mic_in->start(microphonePlayer);
+        setVolume(audio_volume);
+        microphonePlayer->start();
+        connect(mic_out, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
+    }else{
+        mic_out->stop();
+        mic_in->stop();
+        microphonePlayer->stop();
+        //microphonePlayer->resetPlayer();
+        delete mic_out;
+        delete mic_in;
+        mic_out = nullptr;
+        mic_in = nullptr;
+        client.peerUDPRunning = false;
+    }
+
+}
+
+void MainWindow::handleReceivedRecoredData(qint64 len){
+    //qDebug()<<"handleReceivedRecoredData";
+    client.addMicStream(microphonePlayer->readChunkData(len));
+}
+
+void MainWindow::handleReceivedPeerData(char *data, int len){
+    microphonePlayer->addChunkData(data, len);
+    if(client.peerUDPRunning && mic_out->state() == QAudio::IdleState ){
+        mic_out->stop();
+        mic_out->start(microphonePlayer);
+    }
+    delete data;
+}
+
+void MainWindow::handleStateChanged(QAudio::State newState)
+{
+    switch (newState) {
+        case QAudio::IdleState:
+            qDebug() << "IdleState";
+            break;
+
+        case QAudio::StoppedState:
+            qDebug() << "StoppedState";
+            break;
+        case QAudio::SuspendedState:
+            qDebug() << "SuspendedState";
+            break;
+        case QAudio::ActiveState:
+            qDebug() << "ActiveState";
+            break;
+        default:
+            // ... other cases as appropriate
+            break;
+    }
 }

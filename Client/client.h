@@ -5,6 +5,7 @@
 #include <QObject>
 #include <stdio.h>
 #include <winsock2.h>
+#include <QQueue>
 
 
 class Client : public QObject
@@ -25,9 +26,16 @@ public:
     void reqeustCommand(int command, QString data = "");
     void storeServerDetails(QString hostname, QString port);
 
+    bool startPeerUDP(QString, QString);
+    void peerUDPRead();
+    void peerUDPSend();
+    void addMicStream(QByteArray &&data);
+
+
     QString filenames;
     QByteArray downloads;
     bool isDonwloading;
+    bool peerUDPRunning;
 signals:
     void receivedHeader(char *data, qint64 len);
     void receivedChunkData(char *data, qint64 len);
@@ -36,6 +44,7 @@ signals:
     void receivedProgressData(char *);
     void receivedAddPlaylist(QString);
     void receivedCommand(int, char*, int);
+    void receivedPeerData(char*, int);
 
 public slots:
     void requestSong(QString song);
@@ -43,8 +52,7 @@ public slots:
 private:
     std::string serverHostName;
     int portNumber;
-
-
+    QQueue<QByteArray> micQueue;
 
 };
 
