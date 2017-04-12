@@ -196,46 +196,6 @@ void MainWindow::updateProgressData(char *progressData){
     audioPlayer->setProgressData(stringList.at(0).toInt(), stringList.at(1).toInt());
 }
 
-
-/*------------------------------------------------------------------------------------------------------------------
--- FUNCTION: decodeMessage
---
--- DATE: April 7, 2017
---
--- DESIGNER:
---
--- PROGRAMMER:
---
--- INTERFACE: void MainWindow::decodeMessage(QString message)
---                  QString message: Text data recevied from the server
---
--- RETURNS: void.
---
--- NOTES:
---  Called when received a message from the server.
---  Reads the first character of the received message and handle the message by the code.
-----------------------------------------------------------------------------------------------------------------------*/
-void MainWindow::decodeMessage(QString message) {
-    qDebug() << "decodeMessage : " << message;
-
-
-    if(!message.at(0).isNumber())
-        return;
-    switch(message.at(0).digitValue()){
-    case 1: // Dong to Download
-
-        break;
-    case 2: // Update Playlist
-
-        break;
-    case 3: // Update Available Songs
-
-        break;
-    default:
-        break;
-    }
-}
-
 void MainWindow::connectToServer() {
     QString hostname = ui->lineEdit_serverHostname->text();
     QString portNumber = ui->lineEdit_serverPortNumber->text();
@@ -376,9 +336,9 @@ void MainWindow::on_button_connectToClient_clicked()
         QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
         if (!info.isFormatSupported(mic_format)) {
             qWarning()<<"default format not supported try to use nearest";
-            //format = info.nearestFormat(format);
-            client.peerUDPRunning = false;
-            return;
+            mic_format = info.nearestFormat(mic_format);
+            //client.peerUDPRunning = false;
+            //return;
         }
         qDebug()<<"Format";
         mic_out  = new QAudioOutput(mic_format, this);

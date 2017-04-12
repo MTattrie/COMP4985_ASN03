@@ -34,9 +34,9 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     connection.h \
     server.h \
-    packet.h \
     wavfile.h \
-    audioplayer.h
+    audioplayer.h \
+    global.h
 
 FORMS    += mainwindow.ui
 

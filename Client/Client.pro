@@ -35,9 +35,9 @@ HEADERS  += mainwindow.h \
             client.h\
             wavfile.h \
     connection.h \
-    packet.h \
     audioplayer.h \
-    microphoneplayer.h
+    microphoneplayer.h \
+    global.h
 
 FORMS    += mainwindow.ui
 

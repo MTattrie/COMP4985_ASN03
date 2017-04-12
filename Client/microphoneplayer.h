@@ -5,7 +5,7 @@
 #include <QDebug>
 #include "wavfile.h"
 
-class MicrophonePlayer :public QIODevice
+class MicrophonePlayer : public QIODevice
 {
     Q_OBJECT
 public:
@@ -13,8 +13,8 @@ public:
     bool stop();
     bool start();
     bool isPlaying();
-    QByteArray readChunkData(qint64 len);
-    bool addChunkData(const char *data, qint64 len);
+    QByteArray readChunkData(qint64);
+    bool addChunkData(const char *, qint64);
     void resetPlayer();
     qint64 bytesAvailable() const;
 
@@ -24,12 +24,11 @@ private:
     bool playing;
 
 protected:
-     qint64 readData(char *data, qint64 len);
-     qint64 writeData(const char *data, qint64 len);
+     qint64 readData(char *, qint64);
+     qint64 writeData(const char *, qint64);
 
 signals:
     void recorded(qint64);
-
 };
 
 #endif // MICROPHONEPLAYER_H

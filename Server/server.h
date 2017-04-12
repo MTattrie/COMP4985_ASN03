@@ -31,21 +31,17 @@ public:
     void resetStreamData();
     void acceptThread(WSAEVENT event);
     void readThread();
-
     bool setPort(QString _port);
     void startUDP();
     void connectUDP();
     void runUDP();
+    void TCPBroadCast(int command, QByteArray data = "");
 
     bool sendFile(LPSOCKET_INFORMATION &SI, string filename);
     bool loadFile(QQueue<QByteArray>& packets, const string filename);
-
     void saveFile(QByteArray data, QString filename);
 
     char *getClientIP(int client_num);
-
-
-    bool multicast(char *message, const int len);
 
     static void CALLBACK WorkerRoutine_RecvCommand(DWORD Error, DWORD BytesTransferred,
             LPWSAOVERLAPPED Overlapped, DWORD InFlags);
@@ -62,7 +58,6 @@ public:
             LPWSAOVERLAPPED Overlapped, DWORD InFlags);
     void sendToClient(int client_num, int command, QByteArray data);
 
-    void TCPBroadCast(int command, QByteArray data = "");
 
 signals:
     void update_log(QString packet);
@@ -72,13 +67,9 @@ signals:
     void updateAvaliableSongs();
     void receivedAddPlaylist(QString);
 
-public slots:
-
 private:
     QQueue<QByteArray> streamQueue;
     int port;
-
-
 };
 
 #endif // SERVER_H
