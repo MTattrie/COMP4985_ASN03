@@ -64,7 +64,6 @@ private:
     SOCKET socket_peerUDP;
     sockaddr_in server;
     sockaddr_in peer_addr;
-
 };
 
 #endif // CLIENT_H
